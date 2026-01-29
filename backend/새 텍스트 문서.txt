@@ -1,0 +1,2 @@
+DATABASE_URL=postgresql://postgres:password123@localhost:5432/hos_contracts?schema=public
+JWT_SECRET=faba88eb52cc638089b1e2529ada97111d2a85e2ac18f2579994ae161e602f36

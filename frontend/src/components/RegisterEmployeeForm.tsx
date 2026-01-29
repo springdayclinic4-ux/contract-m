@@ -1,0 +1,206 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { authAPI } from '../lib/api';
+import EmailVerification from './EmailVerification';
+import type { RegisterEmployeeRequest } from '../types';
+
+export default function RegisterEmployeeForm() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [email, setEmail] = useState('');
+  const [verified, setVerified] = useState(false);
+
+  const [formData, setFormData] = useState<RegisterEmployeeRequest>({
+    email: '',
+    password: '',
+    name: '',
+    birth_date: '',
+    address: '',
+    phone: '',
+    bank_name: '',
+    account_number: '',
+    terms_service_agreed: false,
+    terms_privacy_agreed: false,
+    marketing_agreed: false,
+  });
+
+  const handleEmailVerified = (verifiedEmail: string) => {
+    setEmail(verifiedEmail);
+    setVerified(true);
+    setFormData({ ...formData, email: verifiedEmail });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.terms_service_agreed || !formData.terms_privacy_agreed) {
+      setError('필수 약관에 동의해주세요.');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+
+    try {
+      await authAPI.registerEmployee(formData);
+      alert('회원가입이 완료되었습니다. 로그인해주세요.');
+      navigate('/login');
+    } catch (err: any) {
+      setError(err.response?.data?.message || '회원가입에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!verified) {
+    return <EmailVerification onVerified={handleEmailVerified} />;
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="label">이메일 (인증완료)</label>
+        <input
+          type="email"
+          value={formData.email}
+          className="input-field bg-gray-100"
+          disabled
+        />
+      </div>
+
+      <div>
+        <label className="label">비밀번호 *</label>
+        <input
+          type="password"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          className="input-field"
+          placeholder="최소 8자 이상"
+          minLength={8}
+          required
+        />
+      </div>
+
+      <div>
+        <label className="label">성명 *</label>
+        <input
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          className="input-field"
+          placeholder="홍길동"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="label">생년월일</label>
+        <input
+          type="date"
+          value={formData.birth_date}
+          onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
+          className="input-field"
+        />
+      </div>
+
+      <div>
+        <label className="label">주소 *</label>
+        <input
+          type="text"
+          value={formData.address}
+          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+          className="input-field"
+          placeholder="서울특별시 강남구..."
+          required
+        />
+      </div>
+
+      <div>
+        <label className="label">연락처</label>
+        <input
+          type="tel"
+          value={formData.phone}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          className="input-field"
+          placeholder="010-1234-5678"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="label">은행명</label>
+          <input
+            type="text"
+            value={formData.bank_name}
+            onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
+            className="input-field"
+            placeholder="국민은행"
+          />
+        </div>
+        <div>
+          <label className="label">계좌번호</label>
+          <input
+            type="text"
+            value={formData.account_number}
+            onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
+            className="input-field"
+            placeholder="000-00-000000"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-3 pt-4 border-t border-gray-200">
+        <label className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            checked={formData.terms_service_agreed}
+            onChange={(e) => setFormData({ ...formData, terms_service_agreed: e.target.checked })}
+            className="mt-1"
+            required
+          />
+          <span className="text-sm">
+            <span className="text-red-600">*</span> 서비스 이용약관에 동의합니다
+          </span>
+        </label>
+
+        <label className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            checked={formData.terms_privacy_agreed}
+            onChange={(e) => setFormData({ ...formData, terms_privacy_agreed: e.target.checked })}
+            className="mt-1"
+            required
+          />
+          <span className="text-sm">
+            <span className="text-red-600">*</span> 개인정보 처리방침에 동의합니다
+          </span>
+        </label>
+
+        <label className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            checked={formData.marketing_agreed}
+            onChange={(e) => setFormData({ ...formData, marketing_agreed: e.target.checked })}
+            className="mt-1"
+          />
+          <span className="text-sm">마케팅 정보 수신에 동의합니다 (선택)</span>
+        </label>
+      </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
+      <button
+        type="submit"
+        className="btn-primary w-full py-3"
+        disabled={loading}
+      >
+        {loading ? '가입 중...' : '회원가입'}
+      </button>
+    </form>
+  );
+}

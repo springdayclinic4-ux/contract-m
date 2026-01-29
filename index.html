@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>의사 일용직(대진) 근로계약서 생성기</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .serif-font {
+            font-family: 'Noto Serif KR', serif;
+        }
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        /* Grayscale Mode Class */
+        .grayscale-mode {
+            filter: grayscale(100%);
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            
+            /* Print Area Reset */
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            
+            /* Important: Reset parent containers to avoid clipping */
+            html, body, main, .overflow-auto, .sticky {
+                height: auto !important;
+                overflow: visible !important;
+                position: static !important;
+            }
+
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                background: white;
+                box-shadow: none;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .page-break {
+                page-break-before: always;
+                break-before: page;
+                margin-top: 0;
+            }
+            
+            @page {
+                size: A4;
+                margin: 10mm;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-100 text-gray-800">
+
+    <!-- Header -->
+    <header class="bg-blue-900 text-white p-4 shadow-md no-print sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h1 class="text-xl font-bold">의사 일용직(대진) 근로계약서 생성기</h1>
+            </div>
+            <button onclick="window.print()" class="flex items-center space-x-2 bg-white text-blue-900 px-4 py-2 rounded hover:bg-blue-50 transition-colors font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2z" />
+                </svg>
+                <span>PDF 저장 / 인쇄</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-8 flex flex-col md:flex-row gap-8 items-start">
+        
+        <!-- Input Form Section (Left) -->
+        <div class="w-full md:w-1/3 space-y-6 no-print pb-10">
+            
+            <!-- Hospital Info -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-lg font-semibold mb-4 border-b pb-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                    병원(갑) 정보
+                </h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">병원명 (상호)</label>
+                        <input type="text" id="hospitalName" placeholder="예: 서울OO병원" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">대표자 성명</label>
+                        <input type="text" id="directorName" placeholder="예: 홍길동" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">병원 주소</label>
+                        <input type="text" id="hospitalAddress" placeholder="예: 서울시 강남구..." class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                    </div>
+                    
+                    <!-- Quick Input (Paste) -->
+                    <details class="group bg-gray-50 rounded-md p-2 border border-gray-200">
+                        <summary class="flex justify-between items-center font-medium cursor-pointer list-none text-sm text-gray-700">
+                            <span>✨ 간편 입력 (붙여넣기)</span>
+                            <span class="transition group-open:rotate-180">
+                                <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                            </span>
+                        </summary>
+                        <div class="text-neutral-600 mt-3 group-open:animate-fadeIn">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs text-gray-500">아래 양식을 복사하여 사용하세요.</span>
+                                <button onclick="copyHospitalTemplate()" class="text-xs bg-white border border-gray-300 hover:bg-gray-100 px-2 py-1 rounded text-gray-700 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                    양식 복사
+                                </button>
+                            </div>
+                            <textarea id="hospitalPasteArea" rows="4" class="w-full p-2 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="위 '양식 복사' 버튼을 누른 후, 여기에 붙여넣고(Ctrl+V) 내용을 채워주세요."></textarea>
+                            <button onclick="parseHospitalInfo()" class="mt-2 w-full bg-blue-600 text-white py-1.5 rounded text-sm hover:bg-blue-700 transition shadow-sm">정보 적용하기</button>
+                        </div>
+                    </details>
+
+                    <!-- Hospital Seal Upload -->
+                    <div class="pt-2 border-t border-gray-100">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">병원 직인/도장</label>
+                        
+                        <!-- Toggle Auto Generation -->
+                        <label class="flex items-center space-x-2 mb-3 cursor-pointer">
+                            <input type="checkbox" id="useAutoSeal" checked class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300" onchange="updatePreview()">
+                            <span class="text-sm text-gray-600">대표자명 입력 시 도장 자동 생성</span>
+                        </label>
+
+                        <input type="file" id="hospitalSealInput" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" onchange="handleHospitalSealUpload(this)">
+                        <p class="text-xs text-gray-400 mt-1">별도 이미지가 있다면 업로드하세요 (자동 생성보다 우선 적용)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doctor Info -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-lg font-semibold mb-4 border-b pb-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    의사(을) 정보
+                </h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">성명</label>
+                        <input type="text" id="doctorName" placeholder="예: 김의사" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">주민등록번호</label>
+                        <input type="text" id="doctorRegistrationNumber" placeholder="예: 800101-1******" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">연락처</label>
+                        <input type="text" id="doctorPhone" placeholder="예: 010-1234-5678" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">면허번호</label>
+                        <input type="text" id="licenseNumber" placeholder="예: 제 12345 호" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">주소</label>
+                        <input type="text" id="doctorAddress" placeholder="거주지 주소 입력" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">은행명</label>
+                            <input type="text" id="bankName" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">계좌번호</label>
+                            <input type="text" id="accountNumber" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Input (Paste) -->
+                    <details class="group bg-gray-50 rounded-md p-2 border border-gray-200">
+                        <summary class="flex justify-between items-center font-medium cursor-pointer list-none text-sm text-gray-700">
+                            <span>✨ 간편 입력 (붙여넣기)</span>
+                            <span class="transition group-open:rotate-180">
+                                <svg fill="none" height="24" shape-rendering="geometricPrecision" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24" width="24"><path d="M6 9l6 6 6-6"></path></svg>
+                            </span>
+                        </summary>
+                        <div class="text-neutral-600 mt-3 group-open:animate-fadeIn">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs text-gray-500">아래 양식을 복사하여 사용하세요.</span>
+                                <button onclick="copyDoctorTemplate()" class="text-xs bg-white border border-gray-300 hover:bg-gray-100 px-2 py-1 rounded text-gray-700 flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                                    양식 복사
+                                </button>
+                            </div>
+                            
+                            <!-- Guide Message Box -->
+                            <p class="text-xs text-blue-600 mb-2 bg-blue-50 p-2 rounded border border-blue-100 leading-snug">
+                                💡 <strong>Tip:</strong> '양식 복사' 후 봉직의 선생님께 <strong>카톡/문자로 보내 정보를 요청</strong>하세요. 회신받은 내용을 그대로 아래 칸에 붙여넣으면 편리합니다!
+                            </p>
+
+                            <textarea id="doctorPasteArea" rows="6" class="w-full p-2 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="받은 내용을 여기에 붙여넣고(Ctrl+V) '정보 적용하기'를 누르세요."></textarea>
+                            <button onclick="parseDoctorInfo()" class="mt-2 w-full bg-blue-600 text-white py-1.5 rounded text-sm hover:bg-blue-700 transition shadow-sm">정보 적용하기</button>
+                        </div>
+                    </details>
+
+                    <!-- Doctor Signature Upload -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">의사 서명/도장 이미지</label>
+                        <input type="file" id="doctorSealInput" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" onchange="handleDoctorSealUpload(this)">
+                        <p class="text-xs text-gray-400 mt-1">서명 사진 또는 도장 이미지</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Work Conditions -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-lg font-semibold mb-4 border-b pb-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    근무 조건
+                </h2>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">근무일 (복수 선택 가능)</label>
+                        <div class="flex gap-2 mb-2">
+                            <input type="date" id="datePicker" class="flex-1 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <button onclick="addWorkDate()" class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm font-medium">추가</button>
+                        </div>
+                        <div id="selectedDatesContainer" class="flex flex-wrap gap-2 mb-2">
+                            <!-- Selected dates will appear here -->
+                        </div>
+                        <p class="text-xs text-gray-400">날짜를 선택하고 '추가' 버튼을 누르세요.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">시작 시간</label>
+                            <input type="time" id="startTime" value="09:00" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">종료 시간</label>
+                            <input type="time" id="endTime" value="18:00" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">휴게 시간</label>
+                        <input type="text" id="breakTime" value="13:00 ~ 14:00 (1시간)" placeholder="예: 13:00 ~ 14:00" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment -->
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-lg font-semibold mb-4 border-b pb-2 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    급여 및 지급 (일용소득세 자동계산)
+                </h2>
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">세전 금액 (Gross)</label>
+                            <input type="number" id="wageGross" placeholder="세전 금액" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50" oninput="onGrossInput()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">세후 금액 (Net)</label>
+                            <input type="number" id="wageNet" placeholder="실수령액" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-green-50" oninput="onNetInput()">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">계약서 표기 기준</label>
+                        <select id="wageType" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()">
+                            <option value="net">실수령액 (Net) 기준 표기</option>
+                            <option value="gross">세전금액 (Gross) 기준 표기</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">* 일용소득세율(근로소득공제 15만원, 소득세율 6%, 근로소득 세액공제 55% 적용)을 기준으로 자동 환산됩니다. 소득세가 1,000원 미만이면 면제됩니다.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">특약사항 (선택)</label>
+                        <textarea id="specialConditions" placeholder="추가적인 합의 사항이 있다면 입력하세요." rows="3" class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500" oninput="updatePreview()"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Documents Settings -->
+            <div class="bg-blue-50 p-6 rounded-lg shadow-sm border border-blue-200">
+                <h2 class="text-lg font-semibold mb-4 border-b border-blue-200 pb-2 flex items-center text-blue-900">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    부가 서류 및 설정
+                </h2>
+                <div class="space-y-3">
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded border border-blue-100 cursor-pointer hover:bg-blue-50 transition">
+                        <input type="checkbox" id="includeSecurityPledge" checked class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500" onchange="updatePreview()">
+                        <span class="font-medium text-gray-700">보안 서약서 포함</span>
+                    </label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded border border-blue-100 cursor-pointer hover:bg-blue-50 transition">
+                        <input type="checkbox" id="includePayStub" checked class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500" onchange="updatePreview()">
+                        <span class="font-medium text-gray-700">급여 명세서 포함</span>
+                    </label>
+                    <label class="flex items-center space-x-3 p-3 bg-white rounded border border-blue-100 cursor-pointer hover:bg-blue-50 transition">
+                        <input type="checkbox" id="includeCrimeCheck" checked class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500" onchange="updatePreview()">
+                        <span class="font-medium text-gray-700">성범죄/아동학대 조회 동의서 포함</span>
+                    </label>
+                    
+                    <div class="border-t border-blue-100 my-2"></div>
+                    
+                    <label class="flex items-center space-x-3 p-3 bg-gray-100 rounded border border-gray-200 cursor-pointer hover:bg-gray-200 transition">
+                        <input type="checkbox" id="bwMode" class="w-5 h-5 text-gray-600 rounded focus:ring-gray-500" onchange="updatePreview()">
+                        <span class="font-medium text-gray-800 flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" /></svg>
+                            흑백 출력 (컬러 잉크 절약)
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Warning Box -->
+            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                <div class="flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-600 mt-0.5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    <div>
+                        <h3 class="text-sm font-bold text-red-800 mb-1">일용직(단기근로) 고용 시 주의사항</h3>
+                        <p class="text-xs text-red-700 leading-relaxed">
+                            <strong>1개월 이상</strong> 계속 근무하거나 <strong>월 60시간(또는 월 8일) 이상</strong> 근무하는 경우, 일용직이 아닌 <strong>상용직</strong>으로 분류되어 4대보험(국민연금, 건강보험) 가입 의무가 발생할 수 있습니다. 
+                            <br>본 계약서는 일반적인 일용직 양식이므로, 장기 근무 시에는 노무 전문가와 상담하시기 바랍니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Section (Right) -->
+        <div class="w-full md:w-2/3 bg-gray-200 p-4 md:p-8 flex justify-center items-start overflow-auto sticky top-20 h-[calc(100vh-100px)]">
+            <div id="print-area" class="bg-white w-[210mm] p-8 shadow-lg text-black relative serif-font text-sm">
+                
+                <!-- Page 1: 근로계약서 -->
+                <div>
+                    <!-- Title -->
+                    <h1 class="text-2xl font-bold text-center mb-8 underline decoration-2 underline-offset-4">일용직(대진) 의사 근로계약서</h1>
+
+                    <!-- Intro -->
+                    <p class="mb-6 text-justify">
+                        <strong id="p-hospitalName">(병원명)</strong> 대표 <strong id="p-directorName">(대표자명)</strong>(이하 "갑"이라 함)와 
+                        의사 <strong id="p-doctorName">(의사성명)</strong>(이하 "을"이라 함)은 다음과 같이 근로계약을 체결하고 이를 성실히 준수할 것을 약정한다.
+                    </p>
+
+                    <!-- Articles -->
+                    <div class="space-y-4">
+                        <section>
+                            <h3 class="font-bold mb-1">제1조 [목적]</h3>
+                            <p>"을"은 "갑"이 운영하는 병원에서 의사로서 진료 및 관련 업무를 성실히 수행하며, "갑"은 이에 대한 보수를 지급한다.</p>
+                        </section>
+
+                        <section>
+                            <h3 class="font-bold mb-1">제2조 [근로장소 및 업무내용]</h3>
+                            <ol class="list-decimal pl-5 space-y-1">
+                                <li>근무장소: <span id="p-hospitalName2">________________</span> (<span id="p-hospitalAddress">________________</span>)</li>
+                                <li>업무내용: 외래 진료, 병동 환자 관리 및 기타 병원이 지정하는 진료 관련 업무</li>
+                            </ol>
+                        </section>
+
+                        <section>
+                            <h3 class="font-bold mb-1">제3조 [근로일 및 근로시간]</h3>
+                            <ol class="list-decimal pl-5 space-y-1">
+                                <li>근로일: <span id="p-workDate"></span></li>
+                                <li>근로시간: <span id="p-startTime">09:00</span> 부터 <span id="p-endTime">18:00</span> 까지</li>
+                                <li>휴게시간: <span id="p-breakTime">13:00 ~ 14:00 (1시간)</span></li>
+                            </ol>
+                        </section>
+
+                        <section>
+                            <h3 class="font-bold mb-1">제4조 [임금]</h3>
+                            <ol class="list-decimal pl-5 space-y-1">
+                                <li>
+                                    일급: <span class="font-bold mx-1">금 <span id="p-dailyWage">__________</span> 원</span> 
+                                    (<span id="p-wageType">세후 실수령액, 일용소득세 공제 후</span>)
+                                </li>
+                                <li>지급방법: 근무 종료 후 <span id="p-paymentDate">당일 지급</span>에 "을"의 계좌로 입금한다.</li>
+                                <li>계좌정보: <span id="p-bankName"></span> <span id="p-accountNumber"></span> (예금주: <span id="p-doctorName2"></span>)</li>
+                            </ol>
+                        </section>
+
+                        <section>
+                            <h3 class="font-bold mb-1">제5조 [성실의무 및 책임]</h3>
+                            <p>"을"은 의료인으로서의 주의 의무를 다하여 환자를 진료하여야 하며, 근무 중 병원의 제반 규정을 준수하고 품위를 유지하여야 한다.</p>
+                        </section>
+
+                        <section id="sec-specialConditions" style="display: none;">
+                            <h3 class="font-bold mb-1">제6조 [특약사항]</h3>
+                            <p id="p-specialConditions" class="whitespace-pre-wrap"></p>
+                        </section>
+
+                        <section>
+                            <h3 class="font-bold mb-1" id="label-etc">제6조 [기타]</h3>
+                            <p>본 계약서에 명시되지 않은 사항은 노동관계법령 및 병원의 통상 관례에 따른다.</p>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- Signatures -->
+                <div class="mt-10">
+                    <p class="text-center mb-6 text-base" id="p-todayDate">
+                        2024년 0월 0일
+                    </p>
+
+                    <div class="flex justify-between items-start gap-8">
+                        <!-- Gap -->
+                        <div class="w-1/2 space-y-2">
+                            <h4 class="font-bold text-base mb-2 text-center">"갑" (사업주)</h4>
+                            <div class="flex"><span class="w-20 text-gray-600 shrink-0">상 호</span><span>: <span id="s-hospitalName"></span></span></div>
+                            <div class="flex"><span class="w-20 text-gray-600 shrink-0">주 소</span><span>: <span id="s-hospitalAddress"></span></span></div>
+                            <!-- Placeholder to align with doctor side -->
+                            <div class="flex h-[3.5rem]"></div>
+                            <div class="flex items-center mt-4 relative">
+                                <span class="w-20 text-gray-600 shrink-0">성 명</span>
+                                <div class="flex-1 flex justify-between items-center border-b border-gray-300 pb-1">
+                                    <span>: <span id="s-directorName"></span></span>
+                                    <div class="relative w-16 h-16 flex items-center justify-center -my-2">
+                                        <span class="text-gray-400 text-sm z-0 absolute">(인/서명)</span>
+                                        <!-- Hospital Seal Image -->
+                                        <img id="s-hospitalSeal-img" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain z-10 opacity-90" style="display:none;" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Eul -->
+                        <div class="w-1/2 space-y-2">
+                            <h4 class="font-bold text-base mb-2 text-center">"을" (근로자)</h4>
+                            <div class="flex"><span class="w-20 text-gray-600 shrink-0">주 소</span><span>: <span id="s-doctorAddress"></span></span></div>
+                            <div class="flex"><span class="w-20 text-gray-600 shrink-0">연락처</span><span>: <span id="s-doctorPhone"></span></span></div>
+                            <div class="flex"><span class="w-24 text-gray-600 shrink-0">주민등록번호</span><span>: <span id="s-doctorRegistrationNumber"></span></span></div>
+                            <div class="flex"><span class="w-20 text-gray-600 shrink-0">면허번호</span><span>: <span id="s-licenseNumber"></span></span></div>
+                            <div class="flex items-center mt-4 relative">
+                                <span class="w-20 text-gray-600 shrink-0">성 명</span>
+                                <div class="flex-1 flex justify-between items-center border-b border-gray-300 pb-1">
+                                    <span>: <span id="s-doctorName"></span></span>
+                                    <div class="relative w-16 h-16 flex items-center justify-center -my-2">
+                                        <span class="text-gray-400 text-sm z-0 absolute">(인/서명)</span>
+                                        <!-- Doctor Seal Image -->
+                                        <img id="s-doctorSeal-img" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain z-10 opacity-90" style="display:none;" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page 2: 개인정보 동의서 -->
+                <div class="page-break pt-10">
+                    <div>
+                        <h1 class="text-xl font-bold text-center mb-8 underline decoration-2 underline-offset-4">개인정보 수집 · 이용 · 제공 동의서</h1>
+
+                        <p class="mb-6 text-justify">
+                            <strong id="agree-hospitalName"></strong>(이하 "병원"이라 함)은(는) 근로계약 체결 및 이행을 위하여 「개인정보 보호법」 제15조 및 제17조에 따라 아래와 같이 귀하의 개인정보를 수집 · 이용 및 제3자에게 제공하고자 합니다. 내용을 자세히 읽으신 후 동의 여부를 결정하여 주십시오.
+                        </p>
+
+                        <div class="space-y-4">
+                            <div class="border border-gray-400 p-3">
+                                <h3 class="font-bold mb-2">1. 개인정보의 수집 및 이용 목적</h3>
+                                <ul class="list-disc pl-5 space-y-1 text-xs">
+                                    <li>근로계약 체결 및 이행, 임금 지급, 4대보험 신고 및 처리</li>
+                                    <li>원천징수 영수증 발급 등 세무 처리</li>
+                                    <li>기타 인사 · 노무 관리 및 법령상 의무 이행</li>
+                                </ul>
+                            </div>
+
+                            <div class="border border-gray-400 p-3">
+                                <h3 class="font-bold mb-2">2. 수집하는 개인정보의 항목</h3>
+                                <ul class="list-disc pl-5 space-y-1 text-xs">
+                                    <li>필수항목: 성명, 주민등록번호, 주소, 연락처, 면허번호</li>
+                                    <li>선택항목: 계좌번호(급여 지급용)</li>
+                                </ul>
+                            </div>
+
+                            <div class="border border-gray-400 p-3">
+                                <h3 class="font-bold mb-2">3. 개인정보의 보유 및 이용 기간</h3>
+                                <p class="text-xs">
+                                    수집된 개인정보는 근로계약 종료 후에도 관련 법령(근로기준법, 국세기본법 등)에 명시된 보존 기간 동안 보관되며, 보존 기간 종료 후 지체 없이 파기합니다.
+                                </p>
+                            </div>
+
+                            <div class="border border-gray-400 p-3">
+                                <h3 class="font-bold mb-2">4. 동의를 거부할 권리 및 불이익</h3>
+                                <p class="text-xs">
+                                    귀하는 개인정보 수집 및 이용에 대한 동의를 거부할 권리가 있습니다. 다만, 필수항목 수집에 동의하지 않을 경우 근로계약 체결 및 유지가 불가능할 수 있습니다.
+                                </p>
+                            </div>
+
+                            <div class="mt-4 text-center">
+                                <p class="font-bold">위와 같이 개인정보를 수집 · 이용하는 것에 동의하십니까?</p>
+                                <div class="mt-2 flex justify-center gap-8">
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300" onclick="return false;">
+                                        <span>동의함</span>
+                                    </label>
+                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                        <input type="checkbox" class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300" onclick="return false;">
+                                        <span>동의하지 않음</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-10">
+                        <p class="text-center mb-8 text-base" id="agree-todayDate">2024년 0월 0일</p>
+                        
+                        <div class="flex justify-end pr-8">
+                            <div class="w-1/2 space-y-2">
+                                <div class="flex"><span class="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: <span id="agree-doctorName"></span></span></div>
+                                <div class="flex"><span class="w-24 text-gray-600 shrink-0 font-bold">주민등록번호</span><span>: <span id="agree-registrationNumber"></span></span></div>
+                                <div class="flex items-center mt-4 relative">
+                                    <span class="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
+                                    <div class="flex-1 flex justify-between items-center border-b border-gray-300 pb-1">
+                                        <span></span>
+                                        <div class="relative w-16 h-16 flex items-center justify-center -my-2">
+                                            <span class="text-gray-400 text-sm z-0 absolute">(인/서명)</span>
+                                            <!-- Duplicate Doctor Seal Image for Agreement -->
+                                            <img id="agree-doctorSeal-img" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain z-10 opacity-90" style="display:none;" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page 3: 보안 서약서 (Security Pledge) -->
+                <div id="page-security" class="page-break pt-10">
+                    <div>
+                        <h1 class="text-xl font-bold text-center mb-10 underline decoration-2 underline-offset-4">개인정보 보호 및 보안 서약서</h1>
+
+                        <p class="mb-6 text-justify">
+                            본인은 <strong id="sec-hospitalName"></strong>(이하 "병원"이라 함)에서 근무함에 있어, 업무 수행 중 알게 된 환자의 개인정보 및 병원의 영업비밀을 보호하기 위하여 다음과 같이 서약합니다.
+                        </p>
+
+                        <div class="space-y-4">
+                            <div class="border border-gray-400 p-4">
+                                <h3 class="font-bold mb-2">1. 환자 개인정보 보호</h3>
+                                <p class="text-xs leading-relaxed">
+                                    본인은 업무상 취득한 환자의 성명, 주민등록번호, 병력 및 진료기록 등 모든 개인정보를 「개인정보 보호법」 및 「의료법」에 따라 엄격히 보호하며, 진료 목적 외의 용도로 열람하거나 제3자에게 유출하지 않겠습니다.
+                                </p>
+                            </div>
+
+                            <div class="border border-gray-400 p-4">
+                                <h3 class="font-bold mb-2">2. EMR(전자의무기록) 접근 권한 관리</h3>
+                                <p class="text-xs leading-relaxed">
+                                    본인에게 부여된 EMR 접근 아이디와 비밀번호를 타인과 공유하지 않으며, 업무 종료 후에는 반드시 로그아웃하여 무단 사용을 방지하겠습니다. 본인의 계정 관리 소홀로 발생한 사고에 대한 책임은 본인에게 있음을 인지합니다.
+                                </p>
+                            </div>
+
+                            <div class="border border-gray-400 p-4">
+                                <h3 class="font-bold mb-2">3. 병원 영업비밀 유지</h3>
+                                <p class="text-xs leading-relaxed">
+                                    병원의 운영 매뉴얼, 환자 리스트, 경영 정보 등 업무상 알게 된 영업비밀을 재직 중은 물론 퇴직 후에도 외부로 유출하거나 경쟁 병원 등에 공개하지 않겠습니다.
+                                </p>
+                            </div>
+
+                            <div class="border border-gray-400 p-4">
+                                <h3 class="font-bold mb-2">4. 자료의 반납 및 폐기</h3>
+                                <p class="text-xs leading-relaxed">
+                                    근무 종료 시 본인이 소지하고 있는 병원 관련 문서, 파일, 저장매체 등 모든 자료를 즉시 반납하거나 복구 불가능한 방법으로 파기하겠습니다.
+                                </p>
+                            </div>
+
+                             <div class="border border-gray-400 p-4 bg-gray-50">
+                                <p class="text-xs leading-relaxed text-center font-bold text-red-600">
+                                    본인은 위 사항을 위반할 경우 관련 법령에 따른 민·형사상 책임을 질 것을 엄숙히 서약합니다.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-16">
+                        <p class="text-center mb-8 text-base" id="sec-todayDate">2024년 0월 0일</p>
+                        
+                        <div class="flex justify-end pr-8">
+                            <div class="w-1/2 space-y-2">
+                                <div class="flex"><span class="w-24 text-gray-600 shrink-0 font-bold">소 속</span><span>: 진료부 (대진의)</span></div>
+                                <div class="flex"><span class="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: <span id="sec-doctorName"></span></span></div>
+                                <div class="flex items-center mt-4 relative">
+                                    <span class="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
+                                    <div class="flex-1 flex justify-between items-center border-b border-gray-300 pb-1">
+                                        <span></span>
+                                        <div class="relative w-16 h-16 flex items-center justify-center -my-2">
+                                            <span class="text-gray-400 text-sm z-0 absolute">(인/서명)</span>
+                                            <!-- Duplicate Doctor Seal Image for Security Pledge -->
+                                            <img id="sec-doctorSeal-img" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain z-10 opacity-90" style="display:none;" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page 4: 급여 명세서 (Pay Stub) -->
+                <div id="page-paystub" class="page-break pt-10">
+                    <div>
+                        <h1 class="text-xl font-bold text-center mb-4 underline decoration-2 underline-offset-4">일용직 급여 명세서</h1>
+                         <p class="text-center text-sm text-gray-500 mb-8">
+                             (귀속년월: <span id="stub-yearMonth">2025-12</span>)
+                         </p>
+                         
+                         <div class="mb-4 text-right">
+                             <h3 class="text-lg font-bold"><span id="stub-doctorName"></span> 님 귀하</h3>
+                         </div>
+
+                         <!-- User Info Table -->
+                         <div class="mb-8">
+                            <table class="w-full border-collapse border border-gray-400 text-sm">
+                                <tr>
+                                    <th class="border border-gray-400 bg-gray-100 p-2 w-1/4">성 명</th>
+                                    <td class="border border-gray-400 p-2 w-1/4 text-center"><span id="stub-doctorName2"></span></td>
+                                    <th class="border border-gray-400 bg-gray-100 p-2 w-1/4">주민등록번호</th>
+                                    <td class="border border-gray-400 p-2 w-1/4 text-center"><span id="stub-registrationNumber"></span></td>
+                                </tr>
+                                <tr>
+                                    <th class="border border-gray-400 bg-gray-100 p-2">근무일자</th>
+                                    <td class="border border-gray-400 p-2 text-center"><span id="stub-workDate"></span></td>
+                                    <th class="border border-gray-400 bg-gray-100 p-2">근무시간</th>
+                                    <td class="border border-gray-400 p-2 text-center"><span id="stub-workTime"></span></td>
+                                </tr>
+                            </table>
+                         </div>
+
+                         <!-- Payment Details Table -->
+                         <div class="mb-8">
+                             <table class="w-full border-collapse border border-gray-400 text-sm">
+                                 <thead>
+                                     <tr class="bg-gray-100">
+                                         <th class="border border-gray-400 p-3 w-1/2">지급 내역</th>
+                                         <th class="border border-gray-400 p-3 w-1/2">공제 내역</th>
+                                     </tr>
+                                 </thead>
+                                 <tbody>
+                                     <tr>
+                                         <td class="border border-gray-400 p-0 align-top h-48">
+                                             <div class="flex justify-between p-3 border-b border-dashed border-gray-300">
+                                                 <span>기본급 (세전)</span>
+                                                 <span class="font-bold"><span id="stub-basePay">0</span> 원</span>
+                                             </div>
+                                             <!-- Additional allowances can be added here -->
+                                             <div class="flex justify-between p-3 border-b border-dashed border-gray-300 text-gray-400">
+                                                 <span>식대/기타</span>
+                                                 <span>-</span>
+                                             </div>
+                                         </td>
+                                         <td class="border border-gray-400 p-0 align-top h-48">
+                                             <div class="flex justify-between p-3 border-b border-dashed border-gray-300">
+                                                 <span>소득세</span>
+                                                 <span class="text-red-600"><span id="stub-taxIncome">0</span> 원</span>
+                                             </div>
+                                             <div class="flex justify-between p-3 border-b border-dashed border-gray-300">
+                                                 <span>지방소득세</span>
+                                                 <span class="text-red-600"><span id="stub-taxLocal">0</span> 원</span>
+                                             </div>
+                                             <div class="flex justify-between p-3 border-b border-dashed border-gray-300 text-gray-400">
+                                                 <span>고용보험</span>
+                                                 <span>(일용직 제외)</span>
+                                             </div>
+                                         </td>
+                                     </tr>
+                                     <tr class="bg-gray-50 font-bold">
+                                         <td class="border border-gray-400 p-3 flex justify-between">
+                                             <span>지급 합계 (A)</span>
+                                             <span><span id="stub-totalPay">0</span> 원</span>
+                                         </td>
+                                         <td class="border border-gray-400 p-3">
+                                            <div class="flex justify-between">
+                                                <span>공제 합계 (B)</span>
+                                                <span><span id="stub-totalDeduction">0</span> 원</span>
+                                            </div>
+                                         </td>
+                                     </tr>
+                                 </tbody>
+                             </table>
+                         </div>
+
+                         <!-- Net Pay Box -->
+                         <div class="border-2 border-blue-900 p-6 text-center bg-blue-50 mb-10">
+                             <h3 class="text-lg font-bold text-gray-600 mb-2">실 수령액 (A - B)</h3>
+                             <p class="text-3xl font-bold text-blue-900">
+                                 <span id="stub-netPay">0</span> 원
+                             </p>
+                         </div>
+                         
+                    </div>
+                    
+                     <div class="mt-16 text-center">
+                        <p class="mb-4 font-bold text-lg">귀하의 노고에 깊이 감사드립니다.</p>
+                        <p class="mb-8" id="stub-todayDate">2024년 0월 0일</p>
+                        <div class="inline-block relative">
+                             <span class="font-bold text-lg mr-8"><span id="stub-hospitalName"></span> 대표 <span id="stub-directorName"></span> (인/서명)</span>
+                              <!-- Duplicate Hospital Seal Image for Pay Stub -->
+                              <img id="stub-hospitalSeal-img" class="absolute top-1/2 right-0 transform -translate-y-1/2 w-16 h-16 object-contain z-10 opacity-90" style="display:none;" />
+                         </div>
+                    </div>
+                </div>
+
+                <!-- Page 5: 성범죄 및 아동학대 관련 범죄 전력 조회 동의서 -->
+                <div id="page-crimecheck" class="page-break pt-10" style="display: none;">
+                    <div>
+                        <h1 class="text-xl font-bold text-center mb-8 underline decoration-2 underline-offset-4">성범죄 경력 및 아동학대 관련 범죄 전력 조회 동의서</h1>
+
+                        <p class="mb-4 text-sm text-justify">
+                            본인은 「아동·청소년의 성보호에 관한 법률」 제56조 및 같은 법 시행령 제25조, 「아동복지법」 제29조의3 및 같은 법 시행령 제26조의4에 따라, 
+                            아래의 기관장이 본인의 성범죄 경력 및 아동학대 관련 범죄 전력을 조회하는 것에 동의합니다.
+                        </p>
+
+                        <!-- Consent Table -->
+                        <div class="border-2 border-gray-800 p-1 mb-6">
+                            <table class="w-full border-collapse border border-gray-400 text-sm">
+                                <tr>
+                                    <th rowspan="4" class="border border-gray-400 bg-gray-100 p-2 w-1/6">동의자<br>(본인)</th>
+                                    <th class="border border-gray-400 bg-gray-50 p-2 w-1/6">성 명</th>
+                                    <td class="border border-gray-400 p-2"><span id="crime-doctorName"></span></td>
+                                </tr>
+                                <tr>
+                                    <th class="border border-gray-400 bg-gray-50 p-2">주민등록번호</th>
+                                    <td class="border border-gray-400 p-2"><span id="crime-registrationNumber"></span></td>
+                                </tr>
+                                <tr>
+                                    <th class="border border-gray-400 bg-gray-50 p-2">주 소</th>
+                                    <td class="border border-gray-400 p-2"><span id="crime-address"></span></td>
+                                </tr>
+                                <tr>
+                                    <th class="border border-gray-400 bg-gray-50 p-2">전화번호</th>
+                                    <td class="border border-gray-400 p-2"><span id="crime-phone"></span></td>
+                                </tr>
+                                <tr>
+                                    <th class="border border-gray-400 bg-gray-100 p-2">조회 대상 기관</th>
+                                    <th class="border border-gray-400 bg-gray-50 p-2">기관명</th>
+                                    <td class="border border-gray-400 p-2"><span id="crime-hospitalName"></span></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div class="mb-8">
+                            <p class="font-bold mb-2 text-sm">※ 관련 법령 확인</p>
+                            <div class="border border-gray-300 bg-gray-50 p-3 text-xs leading-relaxed text-gray-600">
+                                <strong>「아동·청소년의 성보호에 관한 법률」 제56조(아동·청소년 관련기관 등에의 취업제한 등)</strong><br>
+                                ① 아동·청소년대상 성범죄 또는 성인대상 성범죄로 형 또는 치료감호를 선고받아 확정된 자는... (중략) ... 그 형 또는 치료감호의 전부 또는 일부의 집행을 종료하거나 집행이 유예·면제된 날부터 10년 동안 가정을 방문하여 아동·청소년을 직접 대면하는 서비스를 제공하는 업무에 종사할 수 없다.<br><br>
+                                <strong>「아동복지법」 제29조의3(아동관련기관의 취업제한 등)</strong><br>
+                                ① 아동학대관련범죄로 형 또는 치료감호를 선고받아 확정된 사람은... (중략) ... 집행이 종료되거나 집행이 유예·면제된 날부터 10년 동안 아동관련기관을 운영하거나 아동관련기관에 취업 또는 사실상 노무를 제공할 수 없다.
+                            </div>
+                        </div>
+
+                        <div class="mt-8 text-center">
+                            <p class="text-center mb-8 text-base" id="crime-todayDate">2024년 0월 0일</p>
+                            
+                            <div class="flex justify-end pr-8">
+                                <div class="w-1/2 space-y-2">
+                                    <div class="flex"><span class="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: <span id="crime-signatureName"></span></span></div>
+                                    <div class="flex items-center mt-4 relative">
+                                        <span class="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
+                                        <div class="flex-1 flex justify-between items-center border-b border-gray-300 pb-1">
+                                            <span></span>
+                                            <div class="relative w-16 h-16 flex items-center justify-center -my-2">
+                                                <span class="text-gray-400 text-sm z-0 absolute">(인/서명)</span>
+                                                <!-- Duplicate Doctor Seal Image for Crime Check -->
+                                                <img id="crime-doctorSeal-img" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 object-contain z-10 opacity-90" style="display:none;" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-16">
+                            <h4 class="font-bold text-lg text-center"><span id="crime-hospitalName-bottom"></span> 귀중</h4>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // 일용소득세 계산 상수 (2025~2026년 귀속)
+        const LABOR_INCOME_DEDUCTION = 150000; // 근로소득공제: 일 150,000원
+        const INCOME_TAX_RATE = 0.06; // 소득세율: 6%
+        const LABOR_TAX_CREDIT_RATE = 0.55; // 근로소득 세액공제: 산출세액의 55%
+        const MIN_TAX_THRESHOLD = 1000; // 소액부징수: 1,000원 미만 면제
+        
+        // 일용소득세 계산 함수
+        function calculateDailyIncomeTax(gross) {
+            // 1. 근로소득공제: 15만원
+            let taxableIncome = gross - LABOR_INCOME_DEDUCTION;
+            
+            let incomeTax = 0;
+            let localTax = 0;
+            
+            if (taxableIncome > 0) {
+                // 2. 산출세액: 과세표준 * 6%
+                let calculatedTax = taxableIncome * INCOME_TAX_RATE;
+                
+                // 3. 근로소득세액공제: 산출세액의 55%
+                // 즉, 납부할 세액은 산출세액의 45%
+                incomeTax = Math.floor(calculatedTax * (1 - LABOR_TAX_CREDIT_RATE));
+                
+                // 소액부징수: 소득세가 1,000원 미만이면 0원
+                if (incomeTax < MIN_TAX_THRESHOLD) {
+                    incomeTax = 0;
+                } else {
+                    // 10원 단위 절사 (국고금단수계산법)
+                    incomeTax = Math.floor(incomeTax / 10) * 10;
+                }
+                
+                // 4. 지방소득세: 소득세의 10%
+                localTax = Math.floor(incomeTax * 0.1);
+                // 지방소득세 10원 단위 절사
+                localTax = Math.floor(localTax / 10) * 10;
+            }
+            
+            return {
+                incomeTax: incomeTax,
+                localTax: localTax,
+                totalTax: incomeTax + localTax,
+                netPay: gross - (incomeTax + localTax)
+            };
+        }
+
+        let customHospitalSealData = null; // Store custom upload data
+        let customDoctorSealData = null;
+        let workDates = []; // Store selected dates
+
+        // Initialize
+        window.onload = function() {
+            // Set default date picker to today
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            document.getElementById('datePicker').value = dateStr;
+            
+            // Add today as initial work date
+            addWorkDate();
+            
+            updatePreview();
+        };
+
+        function addWorkDate() {
+            const datePicker = document.getElementById('datePicker');
+            const dateVal = datePicker.value;
+            if (!dateVal) return;
+
+            if (!workDates.includes(dateVal)) {
+                workDates.push(dateVal);
+                workDates.sort(); // Sort dates chronologically
+                renderSelectedDates();
+                updatePreview();
+            }
+        }
+
+        function removeWorkDate(index) {
+            workDates.splice(index, 1);
+            renderSelectedDates();
+            updatePreview();
+        }
+
+        function renderSelectedDates() {
+            const container = document.getElementById('selectedDatesContainer');
+            container.innerHTML = '';
+            
+            workDates.forEach((date, index) => {
+                const tag = document.createElement('div');
+                tag.className = 'bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm flex items-center gap-1';
+                tag.innerHTML = `
+                    <span>${date}</span>
+                    <button onclick="removeWorkDate(${index})" class="text-blue-600 hover:text-blue-900 font-bold ml-1">×</button>
+                `;
+                container.appendChild(tag);
+            });
+        }
+
+        // --- Parsing Logic ---
+        function parseHospitalInfo() {
+            const text = document.getElementById('hospitalPasteArea').value;
+            if (!text) return;
+
+            const lines = text.split('\n');
+            lines.forEach(line => {
+                if (line.includes('병원명') || line.includes('상호')) {
+                    document.getElementById('hospitalName').value = line.split(':')[1].trim();
+                } else if (line.includes('대표자') || line.includes('성명') || line.includes('대표')) {
+                    document.getElementById('directorName').value = line.split(':')[1].trim();
+                } else if (line.includes('주소')) {
+                    document.getElementById('hospitalAddress').value = line.split(':')[1].trim();
+                }
+            });
+            updatePreview();
+        }
+
+        function parseDoctorInfo() {
+            const text = document.getElementById('doctorPasteArea').value;
+            if (!text) return;
+
+            const lines = text.split('\n');
+            lines.forEach(line => {
+                if (line.includes('성명') || line.includes('이름')) {
+                    document.getElementById('doctorName').value = line.split(':')[1].trim();
+                } else if (line.includes('주민번호') || line.includes('주민등록번호') || line.includes('생년월일')) {
+                    document.getElementById('doctorRegistrationNumber').value = line.split(':')[1].trim();
+                } else if (line.includes('연락처') || line.includes('전화번호') || line.includes('휴대폰')) {
+                    document.getElementById('doctorPhone').value = line.split(':')[1].trim();
+                } else if (line.includes('면허번호') || line.includes('면허')) {
+                    document.getElementById('licenseNumber').value = line.split(':')[1].trim();
+                } else if (line.includes('주소')) {
+                    document.getElementById('doctorAddress').value = line.split(':')[1].trim();
+                } else if (line.includes('은행') || line.includes('은행명')) {
+                    document.getElementById('bankName').value = line.split(':')[1].trim();
+                } else if (line.includes('계좌') || line.includes('계좌번호')) {
+                    document.getElementById('accountNumber').value = line.split(':')[1].trim();
+                }
+            });
+            updatePreview();
+        }
+
+        // --- Clipboard Copy Logic ---
+        function copyHospitalTemplate() {
+            const template = `병원명: 
+대표자: 
+주소: `;
+            copyTextToClipboard(template);
+        }
+
+        function copyDoctorTemplate() {
+            const template = `성명: 
+주민등록번호: 
+연락처: 
+면허번호: 
+주소: 
+은행명: 
+계좌번호: `;
+            copyTextToClipboard(template);
+        }
+
+        function copyTextToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alert('양식이 복사되었습니다.\n아래 입력창에 붙여넣고(Ctrl+V) 내용을 작성해주세요.');
+            } catch (err) {
+                alert('복사에 실패했습니다. 수동으로 복사해주세요.');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // ... existing code (onGrossInput, onNetInput, handleHospitalSealUpload, handleDoctorSealUpload) ...
+        function onGrossInput() {
+            const grossInput = document.getElementById('wageGross');
+            const netInput = document.getElementById('wageNet');
+            
+            const gross = parseFloat(grossInput.value);
+            
+            if (isNaN(gross)) {
+                netInput.value = '';
+            } else {
+                // 일용소득세 계산 적용
+                const taxResult = calculateDailyIncomeTax(gross);
+                netInput.value = taxResult.netPay;
+            }
+            updatePreview();
+        }
+
+        function onNetInput() {
+            const grossInput = document.getElementById('wageGross');
+            const netInput = document.getElementById('wageNet');
+            
+            const targetNet = parseFloat(netInput.value);
+            
+            if (isNaN(targetNet)) {
+                grossInput.value = '';
+            } else {
+                // 역산: 실수령액에서 세전 금액 계산
+                // 근사치로 시작 (일용소득세율 약 2.7% 가정)
+                let gross = Math.round(targetNet / 0.973);
+                
+                // 정확한 계산을 위한 반복
+                let attempts = 0;
+                let currentNet = calculateDailyIncomeTax(gross).netPay;
+                
+                while (Math.abs(currentNet - targetNet) > 1 && attempts < 50) {
+                    if (currentNet < targetNet) {
+                        gross += Math.max(1, Math.floor((targetNet - currentNet) / 0.973));
+                    } else {
+                        gross -= Math.max(1, Math.floor((currentNet - targetNet) / 0.973));
+                    }
+                    currentNet = calculateDailyIncomeTax(gross).netPay;
+                    attempts++;
+                }
+                
+                grossInput.value = gross;
+            }
+            updatePreview();
+        }
+
+        function handleHospitalSealUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    customHospitalSealData = e.target.result;
+                    updatePreview();
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                customHospitalSealData = null;
+                updatePreview();
+            }
+        }
+
+        function handleDoctorSealUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    customDoctorSealData = e.target.result;
+                    updatePreview();
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                customDoctorSealData = null;
+                updatePreview();
+            }
+        }
+
+        // --- Stamp Generator Logic (Updated for Long Names) ---
+        function generateSealImage(name) {
+            if (!name || name.trim() === '') return null;
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = 150;
+            canvas.height = 150;
+            const ctx = canvas.getContext('2d');
+            
+            const text = name.trim() + "인";
+            const len = text.length;
+            
+            // Draw Circle
+            ctx.beginPath();
+            ctx.ellipse(75, 75, 70, 70, 0, 0, 2 * Math.PI);
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = "#db2929"; // Stamp Red
+            ctx.stroke();
+            
+            // Text Config
+            ctx.fillStyle = "#db2929";
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            
+            // Layout Logic based on length
+            if (len <= 4) {
+                 ctx.font = "bold 65px 'Noto Serif KR', serif";
+                 if (len === 3) { // 홍길인
+                     ctx.fillText(text[0], 75, 45);
+                     ctx.fillText(text[1], 50, 105);
+                     ctx.fillText(text[2], 100, 105);
+                 } else if (len === 4) { // 홍길동인
+                    ctx.fillText(text[0], 50, 50);
+                    ctx.fillText(text[1], 100, 50);
+                    ctx.fillText(text[2], 50, 105);
+                    ctx.fillText(text[3], 100, 105);
+                 } else { // 1 or 2 chars
+                     ctx.fillText(text, 75, 75);
+                 }
+            } else if (len === 5) { // 남궁민수인 (Name 4 chars)
+                // Split 2 lines: 2 chars / 3 chars
+                ctx.font = "bold 45px 'Noto Serif KR', serif";
+                ctx.fillText(text.substring(0, 2), 75, 50);
+                ctx.fillText(text.substring(2, 5), 75, 100);
+            } else if (len === 6) { // 독고영재인 (Name 5 chars)
+                // Split 2 lines: 3 chars / 3 chars
+                ctx.font = "bold 40px 'Noto Serif KR', serif";
+                ctx.fillText(text.substring(0, 3), 75, 52);
+                ctx.fillText(text.substring(3, 6), 75, 98);
+            } else { 
+                // Very long name: Split in half and scale down
+                ctx.font = "bold 35px 'Noto Serif KR', serif";
+                const mid = Math.ceil(len / 2);
+                ctx.fillText(text.substring(0, mid), 75, 55);
+                ctx.fillText(text.substring(mid, len), 75, 100);
+            }
+            
+            return canvas.toDataURL();
+        }
+
+        // ... existing code (formatDate, formatCurrency, updatePreview) ...
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+        }
+
+        function formatCurrency(num) {
+            if (!num && num !== 0) return '';
+            return Number(num).toLocaleString('ko-KR');
+        }
+
+        function updatePreview() {
+            // Get values
+            const data = {
+                hospitalName: document.getElementById('hospitalName').value,
+                directorName: document.getElementById('directorName').value,
+                hospitalAddress: document.getElementById('hospitalAddress').value,
+                doctorName: document.getElementById('doctorName').value,
+                doctorRegistrationNumber: document.getElementById('doctorRegistrationNumber').value, 
+                doctorPhone: document.getElementById('doctorPhone').value,
+                licenseNumber: document.getElementById('licenseNumber').value,
+                doctorAddress: document.getElementById('doctorAddress').value,
+                // workDate is handled by workDates array
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                breakTime: document.getElementById('breakTime').value,
+                wageGross: document.getElementById('wageGross').value,
+                wageNet: document.getElementById('wageNet').value,
+                wageType: document.getElementById('wageType').value,
+                bankName: document.getElementById('bankName').value,
+                accountNumber: document.getElementById('accountNumber').value,
+                specialConditions: document.getElementById('specialConditions').value
+            };
+
+            const includeSecurityPledge = document.getElementById('includeSecurityPledge').checked;
+            const includePayStub = document.getElementById('includePayStub').checked;
+            const includeCrimeCheck = document.getElementById('includeCrimeCheck').checked;
+            const bwMode = document.getElementById('bwMode').checked;
+            const useAutoSeal = document.getElementById('useAutoSeal').checked;
+
+            // Apply B&W Mode
+            const printArea = document.getElementById('print-area');
+            if (bwMode) {
+                printArea.classList.add('grayscale-mode');
+            } else {
+                printArea.classList.remove('grayscale-mode');
+            }
+
+
+            // Update DOM Elements
+            // Intro
+            document.getElementById('p-hospitalName').innerText = data.hospitalName || "(병원명)";
+            document.getElementById('p-directorName').innerText = data.directorName || "(대표자명)";
+            document.getElementById('p-doctorName').innerText = data.doctorName || "(의사성명)";
+
+            // Article 2
+            document.getElementById('p-hospitalName2').innerText = data.hospitalName || "________________";
+            document.getElementById('p-hospitalAddress').innerText = data.hospitalAddress || "________________";
+
+            // Article 3
+            // Format multiple dates
+            let formattedDates = "";
+            if (workDates.length > 0) {
+                formattedDates = workDates.map(d => formatDate(d)).join(', ');
+                if (workDates.length > 1) {
+                    formattedDates += ` (총 ${workDates.length}일)`;
+                }
+            }
+            document.getElementById('p-workDate').innerText = formattedDates;
+            
+            document.getElementById('p-startTime').innerText = data.startTime;
+            document.getElementById('p-endTime').innerText = data.endTime;
+            document.getElementById('p-breakTime').innerText = data.breakTime;
+
+            // Article 4 (Wage) logic
+            let displayWage = "";
+            let displayType = "";
+            
+            if (data.wageType === 'gross') {
+                displayWage = formatCurrency(data.wageGross);
+                displayType = "세전 금액, Gross - 일용소득세 공제 전";
+            } else {
+                displayWage = formatCurrency(data.wageNet);
+                displayType = "세후 실수령액, 일용소득세 공제 후";
+            }
+
+            document.getElementById('p-dailyWage').innerText = displayWage || "__________";
+            document.getElementById('p-wageType').innerText = displayType;
+            
+            document.getElementById('p-bankName').innerText = data.bankName;
+            document.getElementById('p-accountNumber').innerText = data.accountNumber;
+            document.getElementById('p-doctorName2').innerText = data.doctorName;
+
+            // Article 6 (Special Conditions) logic
+            const specialSection = document.getElementById('sec-specialConditions');
+            const etcLabel = document.getElementById('label-etc');
+            
+            if (data.specialConditions && data.specialConditions.trim() !== "") {
+                specialSection.style.display = 'block';
+                document.getElementById('p-specialConditions').innerText = data.specialConditions;
+                etcLabel.innerText = "제7조 [기타]";
+            } else {
+                specialSection.style.display = 'none';
+                etcLabel.innerText = "제6조 [기타]";
+            }
+
+            // Signatures (Page 1)
+            document.getElementById('p-todayDate').innerText = formatDate(new Date());
+
+            document.getElementById('s-hospitalName').innerText = data.hospitalName;
+            document.getElementById('s-hospitalAddress').innerText = data.hospitalAddress;
+            document.getElementById('s-directorName').innerText = data.directorName;
+
+            document.getElementById('s-doctorAddress').innerText = data.doctorAddress;
+            document.getElementById('s-doctorRegistrationNumber').innerText = data.doctorRegistrationNumber; // Changed
+            document.getElementById('s-licenseNumber').innerText = data.licenseNumber;
+            document.getElementById('s-doctorName').innerText = data.doctorName;
+            document.getElementById('s-doctorPhone').innerText = data.doctorPhone;
+
+            // Agreement (Page 2)
+            document.getElementById('agree-hospitalName').innerText = data.hospitalName || "________";
+            document.getElementById('agree-todayDate').innerText = formatDate(new Date());
+            document.getElementById('agree-doctorName').innerText = data.doctorName;
+            document.getElementById('agree-registrationNumber').innerText = data.doctorRegistrationNumber;
+
+            // --- Security Pledge (Page 3) Updates ---
+            const secPage = document.getElementById('page-security');
+            if (includeSecurityPledge) {
+                secPage.style.display = 'block';
+                document.getElementById('sec-hospitalName').innerText = data.hospitalName || "________";
+                document.getElementById('sec-doctorName').innerText = data.doctorName;
+                document.getElementById('sec-todayDate').innerText = formatDate(new Date());
+            } else {
+                secPage.style.display = 'none';
+            }
+
+            // --- Pay Stub (Page 4) Updates ---
+            const stubPage = document.getElementById('page-paystub');
+            if (includePayStub) {
+                stubPage.style.display = 'block';
+                // Basic Info
+                document.getElementById('stub-hospitalName').innerText = data.hospitalName || "(병원명)";
+                document.getElementById('stub-doctorName').innerText = data.doctorName; // To Doctor
+                document.getElementById('stub-doctorName2').innerText = data.doctorName; // In Table
+                document.getElementById('stub-registrationNumber').innerText = data.doctorRegistrationNumber;
+                document.getElementById('stub-workDate').innerText = formattedDates; 
+                document.getElementById('stub-workTime').innerText = `${data.startTime} ~ ${data.endTime}`;
+                document.getElementById('stub-todayDate').innerText = formatDate(new Date()); // Date in footer
+                
+                document.getElementById('stub-directorName').innerText = data.directorName; // From Director
+
+                // Month Logic - Use first date in workDates
+                const firstDate = workDates.length > 0 ? workDates[0] : new Date();
+                const d = new Date(firstDate);
+                if(!isNaN(d)) {
+                    document.getElementById('stub-yearMonth').innerText = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}`;
+                }
+
+                // Calculations - 일용소득세 계산 적용
+                const gross = parseFloat(data.wageGross) || 0;
+                const taxResult = calculateDailyIncomeTax(gross);
+                const incomeTax = taxResult.incomeTax;
+                const localTax = taxResult.localTax;
+                const totalDeduction = taxResult.totalTax;
+                const netPay = taxResult.netPay;
+
+                document.getElementById('stub-basePay').innerText = formatCurrency(gross);
+                document.getElementById('stub-taxIncome').innerText = formatCurrency(incomeTax);
+                document.getElementById('stub-taxLocal').innerText = formatCurrency(localTax);
+                document.getElementById('stub-totalPay').innerText = formatCurrency(gross);
+                document.getElementById('stub-totalDeduction').innerText = formatCurrency(totalDeduction);
+                document.getElementById('stub-netPay').innerText = formatCurrency(netPay);
+
+            } else {
+                stubPage.style.display = 'none';
+            }
+
+            // --- Crime Check (Page 5) Updates ---
+            const crimePage = document.getElementById('page-crimecheck');
+            if (includeCrimeCheck) {
+                crimePage.style.display = 'block';
+                document.getElementById('crime-doctorName').innerText = data.doctorName;
+                document.getElementById('crime-signatureName').innerText = data.doctorName;
+                document.getElementById('crime-registrationNumber').innerText = data.doctorRegistrationNumber;
+                document.getElementById('crime-address').innerText = data.doctorAddress;
+                document.getElementById('crime-phone').innerText = data.doctorPhone;
+                document.getElementById('crime-hospitalName').innerText = data.hospitalName;
+                document.getElementById('crime-todayDate').innerText = formatDate(new Date());
+                document.getElementById('crime-hospitalName-bottom').innerText = data.hospitalName;
+            } else {
+                crimePage.style.display = 'none';
+            }
+
+
+            // --- Seal/Signature Logic ---
+            // 1. Hospital (Priority: Custom Upload > Auto Gen > None)
+            const hospitalImg = document.getElementById('s-hospitalSeal-img');
+            const stubHospitalImg = document.getElementById('stub-hospitalSeal-img'); // Pay Stub Seal
+
+            if (hospitalImg) {
+                if (customHospitalSealData) {
+                    hospitalImg.src = customHospitalSealData;
+                    hospitalImg.style.display = 'block';
+                    hospitalImg.onload = function() {
+                        hospitalImg.style.display = 'block';
+                    };
+                    hospitalImg.onerror = function() {
+                        hospitalImg.style.display = 'none';
+                    };
+                    // Apply to Pay Stub
+                    if(stubHospitalImg) {
+                        stubHospitalImg.src = customHospitalSealData;
+                        stubHospitalImg.style.display = 'block';
+                        stubHospitalImg.onload = function() {
+                            stubHospitalImg.style.display = 'block';
+                        };
+                        stubHospitalImg.onerror = function() {
+                            stubHospitalImg.style.display = 'none';
+                        };
+                    }
+                } else if (data.directorName && useAutoSeal) {
+                    // Auto generate
+                    const autoSeal = generateSealImage(data.directorName);
+                    if (autoSeal) {
+                        hospitalImg.src = autoSeal;
+                        hospitalImg.style.display = 'block';
+                        hospitalImg.onload = function() {
+                            hospitalImg.style.display = 'block';
+                        };
+                        if(stubHospitalImg) {
+                            stubHospitalImg.src = autoSeal;
+                            stubHospitalImg.style.display = 'block';
+                            stubHospitalImg.onload = function() {
+                                stubHospitalImg.style.display = 'block';
+                            };
+                        }
+                    } else {
+                        hospitalImg.style.display = 'none';
+                        if(stubHospitalImg) stubHospitalImg.style.display = 'none';
+                    }
+                } else {
+                    hospitalImg.style.display = 'none';
+                    if(stubHospitalImg) stubHospitalImg.style.display = 'none';
+                }
+            }
+
+            // 2. Doctor (Priority: Custom Upload > None)
+            const doctorImg = document.getElementById('s-doctorSeal-img');
+            const agreeDoctorImg = document.getElementById('agree-doctorSeal-img'); // Page 2 seal
+            const secDoctorImg = document.getElementById('sec-doctorSeal-img'); // Page 3 seal
+            const crimeDoctorImg = document.getElementById('crime-doctorSeal-img'); // Page 5 seal
+
+            const doctorImgs = [doctorImg, agreeDoctorImg, secDoctorImg, crimeDoctorImg].filter(img => img !== null);
+
+            if (customDoctorSealData) {
+                doctorImgs.forEach(img => {
+                    if(img) {
+                        img.src = customDoctorSealData;
+                        img.style.display = 'block';
+                        img.onload = function() {
+                            img.style.display = 'block';
+                        };
+                        img.onerror = function() {
+                            img.style.display = 'none';
+                        };
+                    }
+                });
+            } else {
+                doctorImgs.forEach(img => {
+                    if(img) {
+                        img.style.display = 'none';
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// User Models
+// ============================================
+
+model Hospital {
+  id                        String   @id @default(uuid())
+  businessRegistrationNumber String   @unique @map("business_registration_number")
+  email                     String   @unique
+  passwordHash              String   @map("password_hash")
+  hospitalName              String   @map("hospital_name")
+  directorName              String   @map("director_name")
+  hospitalAddress           String   @map("hospital_address")
+  hospitalPhone             String   @map("hospital_phone")
+  managerName               String?  @map("manager_name")
+  managerPhone              String?  @map("manager_phone")
+  hospitalLogoUrl           String?  @map("hospital_logo_url")
+  hospitalSealUrl           String?  @map("hospital_seal_url")
+  emailVerified             Boolean  @default(false) @map("email_verified")
+  termsServiceAgreed        Boolean  @default(false) @map("terms_service_agreed")
+  termsPrivacyAgreed        Boolean  @default(false) @map("terms_privacy_agreed")
+  termsThirdPartyAgreed     Boolean  @default(false) @map("terms_third_party_agreed")
+  marketingAgreed           Boolean  @default(false) @map("marketing_agreed")
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  contractsAsHospital       Contract[] @relation("HospitalContract")
+  laborContractsAsHospital  LaborContract[] @relation("HospitalLaborContract")
+
+  @@index([email])
+  @@index([businessRegistrationNumber])
+  @@map("hospitals")
+}
+
+model Doctor {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  passwordHash      String   @map("password_hash")
+  name              String
+  licenseNumber     String   @map("license_number")
+  address           String?
+  phone             String?
+  bankName          String?  @map("bank_name")
+  accountNumber     String?  @map("account_number")
+  signatureImageUrl String?  @map("signature_image_url")
+  sealImageUrl      String?  @map("seal_image_url")
+  emailVerified     Boolean  @default(false) @map("email_verified")
+  termsServiceAgreed Boolean @default(false) @map("terms_service_agreed")
+  termsPrivacyAgreed Boolean @default(false) @map("terms_privacy_agreed")
+  marketingAgreed   Boolean  @default(false) @map("marketing_agreed")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  contractsAsDoctor Contract[] @relation("DoctorContract")
+  laborContractsAsDoctor LaborContract[] @relation("DoctorLaborContract")
+
+  @@index([email])
+  @@map("doctors")
+}
+
+model Employee {
+  id                String   @id @default(uuid())
+  email             String   @unique
+  passwordHash      String   @map("password_hash")
+  name              String
+  birthDate         DateTime? @map("birth_date") @db.Date
+  address           String?
+  phone             String?
+  bankName          String?  @map("bank_name")
+  accountNumber     String?  @map("account_number")
+  signatureImageUrl String?  @map("signature_image_url")
+  sealImageUrl      String?  @map("seal_image_url")
+  emailVerified     Boolean  @default(false) @map("email_verified")
+  termsServiceAgreed Boolean @default(false) @map("terms_service_agreed")
+  termsPrivacyAgreed Boolean @default(false) @map("terms_privacy_agreed")
+  marketingAgreed   Boolean  @default(false) @map("marketing_agreed")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  laborContractsAsEmployee LaborContract[] @relation("EmployeeLaborContract")
+
+  @@index([email])
+  @@map("employees")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userType     String   @map("user_type") // 'hospital' | 'doctor' | 'employee'
+  userId       String   @map("user_id")
+  accessToken  String   @map("access_token")
+  refreshToken String   @map("refresh_token")
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@index([userType, userId])
+  @@index([refreshToken])
+  @@map("sessions")
+}
+
+// ============================================
+// Contract Models
+// ============================================
+
+model Contract {
+  id                      String   @id @default(uuid())
+  contractNumber          String   @unique @map("contract_number")
+  creatorType             String   @map("creator_type") // 'hospital' | 'doctor' | 'employee'
+  creatorId               String   @map("creator_id")
+  hospitalId              String?  @map("hospital_id")
+  doctorId                String?  @map("doctor_id")
+  employeeId              String?  @map("employee_id")
+  doctorEmail             String   @map("doctor_email")
+  doctorName              String   @map("doctor_name")
+  doctorRegistrationNumber String?  @map("doctor_registration_number")
+  doctorPhone             String?  @map("doctor_phone")
+  doctorLicenseNumber     String   @map("doctor_license_number")
+  doctorAddress           String   @map("doctor_address")
+  doctorBankName          String?  @map("doctor_bank_name")
+  doctorAccountNumber     String?  @map("doctor_account_number")
+  workDates               Json?
+  startTime               String?  @map("start_time")
+  endTime                 String?  @map("end_time")
+  breakTime               String?  @map("break_time")
+  wageGross               Decimal? @map("wage_gross") @db.Decimal(15, 2)
+  wageNet                 Decimal? @map("wage_net") @db.Decimal(15, 2)
+  wageType                String?  @map("wage_type") // 'gross' | 'net'
+  specialConditions       String?  @map("special_conditions")
+  includeSecurityPledge   Boolean  @default(true) @map("include_security_pledge")
+  includePayStub          Boolean  @default(true) @map("include_pay_stub")
+  includeCrimeCheck       Boolean  @default(true) @map("include_crime_check")
+  status                  String   @default("draft") @map("status") // 'draft' | 'sent' | 'pending' | 'signed' | 'rejected' | 'cancelled'
+  sentAt                  DateTime? @map("sent_at")
+  signedAt                DateTime? @map("signed_at")
+  signatureImageUrl       String?  @map("signature_image_url")
+  rejectionReason         String?  @map("rejection_reason")
+  signedPdfUrl            String?  @map("signed_pdf_url")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  // Note: creatorId는 creatorType에 따라 다른 테이블을 참조하므로, application 레벨에서 처리
+  hospitalContract        Hospital? @relation("HospitalContract", fields: [hospitalId], references: [id], onDelete: SetNull)
+  doctorContract          Doctor?   @relation("DoctorContract", fields: [doctorId], references: [id], onDelete: SetNull)
+  contractInvitations     ContractInvitation[]
+
+  @@index([creatorType, creatorId])
+  @@index([doctorEmail])
+  @@index([status])
+  @@index([createdAt])
+  @@map("contracts")
+}
+
+model LaborContract {
+  id                      String   @id @default(uuid())
+  contractNumber          String   @unique @map("contract_number")
+  creatorType             String   @map("creator_type")
+  creatorId               String   @map("creator_id")
+  hospitalId              String?  @map("hospital_id")
+  doctorId                String?  @map("doctor_id")
+  employeeId              String?  @map("employee_id")
+  employeeEmail           String   @map("employee_email")
+  employeeName            String   @map("employee_name")
+  employeeRegistrationNumber String? @map("employee_registration_number")
+  employeeBirthDate       DateTime? @map("employee_birth_date") @db.Date
+  employeePhone           String?  @map("employee_phone")
+  employeeAddress         String   @map("employee_address")
+  employeeBankName        String?  @map("employee_bank_name")
+  employeeAccountNumber   String?  @map("employee_account_number")
+  contractType            String?  @map("contract_type") // 'regular' | 'temporary' | 'contract'
+  workContractStartDate   DateTime? @map("work_contract_start_date") @db.Date
+  workContractEndDate     DateTime? @map("work_contract_end_date") @db.Date
+  salaryContractStartDate DateTime? @map("salary_contract_start_date") @db.Date
+  salaryContractEndDate   DateTime? @map("salary_contract_end_date") @db.Date
+  probationPeriod         Int?     @map("probation_period")
+  probationSalaryRate     Decimal? @map("probation_salary_rate") @db.Decimal(5, 2)
+  annualSalaryTotal       Decimal? @map("annual_salary_total") @db.Decimal(15, 2)
+  baseSalary              Decimal? @map("base_salary") @db.Decimal(15, 2)
+  mealAllowance           Decimal? @map("meal_allowance") @db.Decimal(15, 2)
+  fixedOvertimeAllowance  Decimal? @map("fixed_overtime_allowance") @db.Decimal(15, 2)
+  monthlyBaseSalary       Decimal? @map("monthly_base_salary") @db.Decimal(15, 2)
+  monthlyMealAllowance    Decimal? @map("monthly_meal_allowance") @db.Decimal(15, 2)
+  monthlyOvertimeAllowance Decimal? @map("monthly_overtime_allowance") @db.Decimal(15, 2)
+  monthlyTotal            Decimal? @map("monthly_total") @db.Decimal(15, 2)
+  regularHourlyWage       Decimal? @map("regular_hourly_wage") @db.Decimal(10, 2)
+  monthlyBaseHours        Int?     @map("monthly_base_hours")
+  monthlyOvertimeHours    Int?     @map("monthly_overtime_hours")
+  payDate                 Int?     @map("pay_date")
+  workContent             String?  @map("work_content")
+  workLocation            String?  @map("work_location")
+  workStartTime           String?  @map("work_start_time")
+  workEndTime             String?  @map("work_end_time")
+  breakTime               String?  @map("break_time")
+  workDaysPerWeek         Int?     @map("work_days_per_week")
+  includeSecurityPledge   Boolean  @default(true) @map("include_security_pledge")
+  includePrivacyConsent   Boolean  @default(true) @map("include_privacy_consent")
+  status                  String   @default("draft") @map("status")
+  sentAt                  DateTime? @map("sent_at")
+  signedAt                DateTime? @map("signed_at")
+  signatureImageUrl       String?  @map("signature_image_url")
+  rejectionReason         String?  @map("rejection_reason")
+  signedPdfUrl            String?  @map("signed_pdf_url")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  // Note: creatorId는 creatorType에 따라 다른 테이블을 참조하므로, application 레벨에서 처리
+  hospitalContract        Hospital? @relation("HospitalLaborContract", fields: [hospitalId], references: [id], onDelete: SetNull)
+  doctorContract          Doctor?   @relation("DoctorLaborContract", fields: [doctorId], references: [id], onDelete: SetNull)
+  employeeContract        Employee? @relation("EmployeeLaborContract", fields: [employeeId], references: [id], onDelete: SetNull)
+  laborContractInvitations LaborContractInvitation[]
+
+  @@index([creatorType, creatorId])
+  @@index([employeeEmail])
+  @@index([status])
+  @@index([createdAt])
+  @@map("labor_contracts")
+}
+
+// ============================================
+// Invitation Models
+// ============================================
+
+model ContractInvitation {
+  id              String   @id @default(uuid())
+  contractId      String   @unique @map("contract_id")
+  invitationToken String   @unique @map("invitation_token")
+  sentVia         String   @default("email") @map("sent_via")
+  sentAt          DateTime @default(now()) @map("sent_at")
+  expiresAt       DateTime @map("expires_at")
+  clickedAt       DateTime? @map("clicked_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  contract        Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([invitationToken])
+  @@map("contract_invitations")
+}
+
+model LaborContractInvitation {
+  id              String   @id @default(uuid())
+  laborContractId String   @unique @map("labor_contract_id")
+  invitationToken String   @unique @map("invitation_token")
+  sentVia         String   @default("email") @map("sent_via")
+  sentAt          DateTime @default(now()) @map("sent_at")
+  expiresAt       DateTime @map("expires_at")
+  clickedAt       DateTime? @map("clicked_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  laborContract   LaborContract @relation(fields: [laborContractId], references: [id], onDelete: Cascade)
+
+  @@index([invitationToken])
+  @@map("labor_contract_invitations")
+}
+
+// ============================================
+// Verification Models
+// ============================================
+
+model EmailVerification {
+  id              String   @id @default(uuid())
+  email           String
+  verificationCode String   @map("verification_code")
+  expiresAt       DateTime @map("expires_at")
+  verified        Boolean  @default(false)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@index([email])
+  @@index([verificationCode])
+  @@map("email_verifications")
+}
