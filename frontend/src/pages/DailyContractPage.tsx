@@ -190,9 +190,29 @@ export default function DailyContractPage() {
     }
   };
 
+  const validateForm = () => {
+    const missing: string[] = [];
+    if (!formData.doctor_name.trim()) missing.push('의사 성명');
+    if (!formData.doctor_email.trim()) missing.push('의사 이메일');
+    if (!formData.doctor_registration_number.trim()) missing.push('주민등록번호');
+    if (!formData.doctor_phone.trim()) missing.push('연락처');
+    if (!formData.doctor_license_number.trim()) missing.push('면허번호');
+    if (!formData.doctor_address.trim()) missing.push('주소');
+    if (workDates.length === 0) missing.push('근무일');
+    if (!formData.wage_gross && !formData.wage_net) missing.push('급여 금액');
+    return missing;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const missing = validateForm();
+    if (missing.length > 0) {
+      setError(`다음 항목을 입력해주세요: ${missing.join(', ')}`);
+      return;
+    }
+
     setLoading(true);
 
     try {
