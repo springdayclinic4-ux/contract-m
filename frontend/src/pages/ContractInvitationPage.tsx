@@ -26,6 +26,10 @@ export default function ContractInvitationPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
+  // 로그인한 의사 이메일
+  const [loggedInEmail, setLoggedInEmail] = useState('');
+  const [emailMismatch, setEmailMismatch] = useState(false);
+
   // 로그인 상태 체크
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
@@ -35,6 +39,7 @@ export default function ContractInvitationPage() {
         const user = JSON.parse(userStr);
         if (user.type === 'doctor') {
           setIsLoggedIn(true);
+          setLoggedInEmail(user.email || '');
         }
       } catch {}
     }
@@ -45,6 +50,13 @@ export default function ContractInvitationPage() {
       loadContract();
     }
   }, [token]);
+
+  // 로그인 이메일과 계약서 이메일 불일치 체크
+  useEffect(() => {
+    if (isLoggedIn && loggedInEmail && contract?.doctorEmail) {
+      setEmailMismatch(loggedInEmail !== contract.doctorEmail);
+    }
+  }, [isLoggedIn, loggedInEmail, contract]);
 
   // 캔버스 크기를 컨테이너에 맞춤
   const resizeCanvas = useCallback(() => {
@@ -109,7 +121,14 @@ export default function ContractInvitationPage() {
         localStorage.setItem('accessToken', payload.accessToken);
         localStorage.setItem('user', JSON.stringify(payload.user));
         setIsLoggedIn(true);
+        setLoggedInEmail(payload.user.email || '');
         setLoginMode(false);
+        // 이메일 불일치 확인은 contract 로드 후 체크
+        if (contract?.doctorEmail && payload.user.email && payload.user.email !== contract.doctorEmail) {
+          setEmailMismatch(true);
+        } else {
+          setEmailMismatch(false);
+        }
       } else {
         setLoginError(data?.message || '로그인에 실패했습니다.');
       }
@@ -407,12 +426,48 @@ export default function ContractInvitationPage() {
           )}
 
           {/* 로그인 완료 표시 */}
-          {isLoggedIn && canSign && (
+          {isLoggedIn && canSign && !emailMismatch && (
             <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
               <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="text-sm text-green-800 font-medium">의사 계정으로 로그인되었습니다. 서명이 가능합니다.</span>
+              <span className="text-sm text-green-800 font-medium">의사 계정으로 로그인되었습니다. ({loggedInEmail}) 서명이 가능합니다.</span>
+            </div>
+          )}
+
+          {/* 이메일 불일치 경고 */}
+          {isLoggedIn && canSign && emailMismatch && (
+            <div className="mb-6 p-5 bg-red-50 border-2 border-red-300 rounded-xl">
+              <div className="flex items-start gap-3">
+                <svg className="w-6 h-6 text-red-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <div>
+                  <h3 className="font-bold text-red-800 mb-1">이메일이 일치하지 않습니다</h3>
+                  <p className="text-sm text-red-700 mb-2">
+                    현재 로그인된 계정: <strong>{loggedInEmail}</strong>
+                  </p>
+                  <p className="text-sm text-red-700 mb-3">
+                    계약서 초대 이메일: <strong>{contract.doctorEmail}</strong>
+                  </p>
+                  <p className="text-sm text-red-700 mb-3">
+                    초대받은 이메일 계정으로 다시 로그인해주세요.
+                  </p>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('accessToken');
+                      localStorage.removeItem('user');
+                      setIsLoggedIn(false);
+                      setLoggedInEmail('');
+                      setEmailMismatch(false);
+                      setLoginMode(true);
+                    }}
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors"
+                  >
+                    다른 계정으로 로그인
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -459,8 +514,8 @@ export default function ContractInvitationPage() {
             </div>
           )}
 
-          {/* 액션 버튼 - 로그인한 경우만 서명/거부 가능 */}
-          {mode === 'view' && canSign && isLoggedIn && (
+          {/* 액션 버튼 - 로그인 + 이메일 일치 시만 서명/거부 가능 */}
+          {mode === 'view' && canSign && isLoggedIn && !emailMismatch && (
             <div className="flex gap-3">
               <button
                 onClick={() => setMode('sign')}
@@ -478,7 +533,7 @@ export default function ContractInvitationPage() {
           )}
 
           {/* 서명 모드 */}
-          {mode === 'sign' && isLoggedIn && (
+          {mode === 'sign' && isLoggedIn && !emailMismatch && (
             <div className="space-y-4">
               <div ref={containerRef}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">서명을 그려주세요</label>
@@ -524,7 +579,7 @@ export default function ContractInvitationPage() {
           )}
 
           {/* 거부 모드 */}
-          {mode === 'reject' && isLoggedIn && (
+          {mode === 'reject' && isLoggedIn && !emailMismatch && (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">거부 사유 *</label>

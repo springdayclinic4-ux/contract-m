@@ -735,6 +735,20 @@ async function contractRoutes(fastify, options) {
     const { token } = request.params;
     const { signature_image_url } = request.body;
 
+    // 로그인한 의사 이메일 확인
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    if (!authToken) {
+      return reply.status(401).send({ success: false, message: '로그인이 필요합니다.' });
+    }
+    const session = await prisma.session.findFirst({ where: { accessToken: authToken } });
+    if (!session || session.userType !== 'doctor') {
+      return reply.status(401).send({ success: false, message: '의사 계정으로 로그인해야 합니다.' });
+    }
+    const doctor = await prisma.doctor.findUnique({ where: { id: session.userId } });
+    if (!doctor) {
+      return reply.status(401).send({ success: false, message: '의사 정보를 찾을 수 없습니다.' });
+    }
+
     // 일용직 계약서 초대 확인
     const contractInvitation = await prisma.contractInvitation.findUnique({
       where: { invitationToken: token },
@@ -744,6 +758,14 @@ async function contractRoutes(fastify, options) {
     });
 
     if (contractInvitation) {
+      // 초대 이메일과 로그인 이메일 일치 확인
+      if (contractInvitation.contract.doctorEmail !== doctor.email) {
+        return reply.status(403).send({
+          success: false,
+          message: '이 계약서의 초대 대상 의사가 아닙니다. 초대받은 이메일 계정으로 로그인해주세요.'
+        });
+      }
+
       // 초대 만료 확인
       if (contractInvitation.expiresAt < new Date()) {
         return reply.status(400).send({
@@ -785,6 +807,15 @@ async function contractRoutes(fastify, options) {
     });
 
     if (laborInvitation) {
+      // 초대 이메일과 로그인 이메일 일치 확인
+      const laborEmail = laborInvitation.laborContract.employeeEmail || laborInvitation.laborContract.doctorEmail;
+      if (laborEmail && laborEmail !== doctor.email) {
+        return reply.status(403).send({
+          success: false,
+          message: '이 계약서의 초대 대상이 아닙니다. 초대받은 이메일 계정으로 로그인해주세요.'
+        });
+      }
+
       // 초대 만료 확인
       if (laborInvitation.expiresAt < new Date()) {
         return reply.status(400).send({
