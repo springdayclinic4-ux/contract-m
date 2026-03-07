@@ -298,7 +298,7 @@ export default function ContractInvitationPage() {
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {isDaily ? '일용직 근로계약서' : '일반 근로계약서'}
+              {isDaily ? (contract.taxMethod === 'business' ? '프리랜서 계약서' : '일용직 근로계약서') : '일반 근로계약서'}
             </h1>
             <p className="text-gray-600">계약서 번호: {contract.contractNumber}</p>
             {contract.status === 'signed' && (

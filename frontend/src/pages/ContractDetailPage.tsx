@@ -273,7 +273,7 @@ export default function ContractDetailPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                {isDaily ? '일용직 근로계약서' : '일반 근로계약서'}
+                {isDaily ? (contract.taxMethod === 'business' ? '프리랜서 계약서' : '일용직 근로계약서') : '일반 근로계약서'}
               </h1>
               <p className="text-sm text-gray-600 mt-1">
                 계약서 번호: {contract.contractNumber}

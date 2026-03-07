@@ -106,7 +106,7 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
     <div className="bg-white p-12" style={{ fontFamily: "'Noto Serif KR', serif", fontSize: '14px', lineHeight: '1.8' }}>
       {/* ========== Page 1: 근로계약서 ========== */}
       <h1 className="text-3xl font-bold text-center mb-8" style={{ textDecoration: 'underline', textUnderlineOffset: '8px' }}>
-        일용직(대진) 의사 근로계약서
+        {data.taxMethod === 'business' ? '프리랜서 의사 용역계약서' : '일용직(대진) 의사 근로계약서'}
       </h1>
 
       <p className="mb-8 text-justify">

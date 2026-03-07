@@ -85,7 +85,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
       {/* Page 1: 근로계약서 */}
       <div>
         <h1 className="text-2xl font-bold text-center mb-8" style={{ textDecoration: 'underline', textDecorationThickness: '2px', textUnderlineOffset: '8px' }}>
-          일용직(대진) 의사 근로계약서
+          {data.tax_method === 'business' ? '프리랜서 의사 용역계약서' : '일용직(대진) 의사 근로계약서'}
         </h1>
 
         <p className="mb-6 text-justify">

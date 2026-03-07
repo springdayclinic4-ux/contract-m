@@ -247,7 +247,7 @@ export default function DashboardPage() {
                         <span className="text-xs text-gray-500">{c.contractNumber}</span>
                       </div>
                       <p className="font-bold text-gray-900 truncate">
-                        {c.hospitalName || '(병원명 미등록)'} - 일용직 근로계약서
+                        {c.hospitalName || '(병원명 미등록)'} - {c.taxMethod === 'business' ? '프리랜서 계약서' : '일용직 근로계약서'}
                       </p>
                       <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
                         <span>근무일: {c.workDates?.length ? `${c.workDates.length}일` : '-'}</span>
