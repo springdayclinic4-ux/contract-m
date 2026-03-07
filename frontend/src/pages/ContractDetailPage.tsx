@@ -292,7 +292,7 @@ export default function ContractDetailPage() {
 
       {/* 계약서 본문 */}
       <div className="max-w-5xl mx-auto py-8 px-4 print:p-0">
-        <div className="bg-white rounded-lg shadow-lg mb-6 print:shadow-none print:rounded-none">
+        <div id="print-area" className="print-area bg-white rounded-lg shadow-lg mb-6 print:shadow-none print:rounded-none">
           {isDaily ? (
             <DailyContractTemplate data={contractData} />
           ) : (

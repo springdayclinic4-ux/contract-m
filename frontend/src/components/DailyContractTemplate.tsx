@@ -57,7 +57,9 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
   const hasSpecialConditions = data.specialConditions && data.specialConditions.trim() !== '';
 
   // 세금 계산 (급여명세서용)
-  const gross = parseFloat(data.wageGross || '0') || 0;
+  const dailyWage = parseFloat(data.wageGross || '0') || 0;
+  const workDayCount = data.workDates?.length || 1;
+  const gross = dailyWage * workDayCount;
   const incomeTax = Math.floor(gross * 0.03);
   const localTax = Math.floor(gross * 0.003);
   const totalDeduction = incomeTax + localTax;
@@ -164,9 +166,9 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
               <span className="w-20 text-gray-700 shrink-0">성 명</span>
               <div className="flex-1 flex justify-between items-center border-b border-gray-400 pb-2">
                 <span>: {data.directorName || '__________'}</span>
-                <div className="relative w-24 h-24 flex items-center justify-center">
+                <div className="relative flex items-center justify-center" style={{ width: '120px', height: '80px' }}>
                   {data.hospitalSignatureUrl ? (
-                    <img src={data.hospitalSignatureUrl} alt="병원 서명" className="max-h-20 max-w-20 object-contain" />
+                    <img src={data.hospitalSignatureUrl} alt="병원 서명" style={{ maxHeight: '80px', maxWidth: '120px' }} className="object-contain" />
                   ) : (
                     <span className="text-gray-400 text-sm">(인/서명)</span>
                   )}
@@ -197,9 +199,9 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
               <span className="w-24 text-gray-700 shrink-0">성 명</span>
               <div className="flex-1 flex justify-between items-center border-b border-gray-400 pb-2">
                 <span>: {data.doctorName || '__________'}</span>
-                <div className="relative w-24 h-24 flex items-center justify-center">
+                <div className="relative flex items-center justify-center" style={{ width: '120px', height: '80px' }}>
                   {data.signatureImageUrl ? (
-                    <img src={data.signatureImageUrl} alt="의사 서명" className="max-h-20 max-w-20 object-contain" />
+                    <img src={data.signatureImageUrl} alt="의사 서명" style={{ maxHeight: '80px', maxWidth: '120px' }} className="object-contain" />
                   ) : (
                     <span className="text-gray-400 text-sm">(인/서명)</span>
                   )}
@@ -281,9 +283,9 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
                 <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
                 <div className="flex-1 flex justify-between items-center border-b border-gray-300 pb-1">
                   <span></span>
-                  <div className="relative w-24 h-24 flex items-center justify-center -my-2">
+                  <div className="relative flex items-center justify-center -my-2" style={{ width: '120px', height: '80px' }}>
                     {data.signatureImageUrl ? (
-                      <img src={data.signatureImageUrl} alt="의사 서명" className="max-h-20 max-w-20 object-contain" />
+                      <img src={data.signatureImageUrl} alt="의사 서명" style={{ maxHeight: '80px', maxWidth: '120px' }} className="object-contain" />
                     ) : (
                       <span className="text-gray-400 text-sm">(인/서명)</span>
                     )}
@@ -359,9 +361,9 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
                   <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
                   <div className="flex-1 flex justify-between items-center border-b border-gray-300 pb-1">
                     <span></span>
-                    <div className="relative w-24 h-24 flex items-center justify-center -my-2">
+                    <div className="relative flex items-center justify-center -my-2" style={{ width: '120px', height: '80px' }}>
                       {data.signatureImageUrl ? (
-                        <img src={data.signatureImageUrl} alt="의사 서명" className="max-h-20 max-w-20 object-contain" />
+                        <img src={data.signatureImageUrl} alt="의사 서명" style={{ maxHeight: '80px', maxWidth: '120px' }} className="object-contain" />
                       ) : (
                         <span className="text-gray-400 text-sm">(인/서명)</span>
                       )}
@@ -419,12 +421,16 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
                 <tr>
                   <td className="border border-gray-400 p-0 align-top" style={{ height: '192px' }}>
                     <div className="flex justify-between p-3 border-b border-dashed border-gray-300">
-                      <span>기본급 (세전)</span>
-                      <span className="font-bold">{gross.toLocaleString()} 원</span>
+                      <span>일급</span>
+                      <span>{dailyWage.toLocaleString()} 원</span>
                     </div>
-                    <div className="flex justify-between p-3 border-b border-dashed border-gray-300 text-gray-400">
-                      <span>식대/기타</span>
-                      <span>-</span>
+                    <div className="flex justify-between p-3 border-b border-dashed border-gray-300">
+                      <span>근무일수</span>
+                      <span>{workDayCount}일</span>
+                    </div>
+                    <div className="flex justify-between p-3 border-b border-dashed border-gray-300">
+                      <span>기본급 합계 (세전)</span>
+                      <span className="font-bold">{gross.toLocaleString()} 원</span>
                     </div>
                   </td>
                   <td className="border border-gray-400 p-0 align-top" style={{ height: '192px' }}>
@@ -542,9 +548,9 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
                   <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
                   <div className="flex-1 flex justify-between items-center border-b border-gray-300 pb-1">
                     <span></span>
-                    <div className="relative w-24 h-24 flex items-center justify-center -my-2">
+                    <div className="relative flex items-center justify-center -my-2" style={{ width: '120px', height: '80px' }}>
                       {data.signatureImageUrl ? (
-                        <img src={data.signatureImageUrl} alt="의사 서명" className="max-h-20 max-w-20 object-contain" />
+                        <img src={data.signatureImageUrl} alt="의사 서명" style={{ maxHeight: '80px', maxWidth: '120px' }} className="object-contain" />
                       ) : (
                         <span className="text-gray-400 text-sm">(인/서명)</span>
                       )}

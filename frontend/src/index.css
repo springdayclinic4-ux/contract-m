@@ -62,64 +62,51 @@
 
 /* Print Styles */
 @media print {
-  /* 모든 요소 숨기기 */
-  body * {
-    visibility: hidden;
-  }
-  
-  /* print-area와 그 하위 요소만 표시 */
-  .print-area,
-  .print-area *,
-  #print-area,
-  #print-area * {
-    visibility: visible;
-  }
-  
-  /* 레이아웃 초기화 */
-  html, body, main, div {
-    height: auto !important;
-    overflow: visible !important;
-    position: static !important;
-    max-height: none !important;
-  }
-
-  /* print-area 위치 및 스타일 */
-  .print-area,
-  #print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0 !important;
-    padding: 20mm !important;
-    background: white !important;
-    box-shadow: none !important;
-  }
-  
-  /* 인쇄 시 숨길 요소 */
-  .print\\:hidden,
+  /* 인쇄 시 숨길 요소 - 먼저 처리 */
+  .print\:hidden,
   header,
   nav,
   .no-print {
     display: none !important;
-    visibility: hidden !important;
   }
-  
+
+  /* 레이아웃 초기화 */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  /* print-area 스타일 */
+  .print-area,
+  #print-area {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+  }
+
   /* 페이지 구분 */
   .page-break {
     page-break-before: always;
     break-before: page;
-    margin-top: 0;
-    padding-top: 0;
+    margin-top: 0 !important;
+    padding-top: 20px !important;
+    border-top: none !important;
   }
-  
+
   /* 페이지 설정 */
   @page {
     size: A4;
     margin: 10mm;
   }
-  
-  /* 추가: 배경색 강제 출력 */
+
+  /* 배경색 강제 출력 */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
