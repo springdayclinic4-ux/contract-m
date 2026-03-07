@@ -54,8 +54,8 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
 
   // 급여 표시 로직
   const displayWage = data.wageType === 'gross'
-    ? (data.wageGross ? Number(data.wageGross).toLocaleString() : '__________')
-    : (data.wageNet ? Number(data.wageNet).toLocaleString() : '__________');
+    ? (data.wageGross ? Number(data.wageGross).toLocaleString() : '')
+    : (data.wageNet ? Number(data.wageNet).toLocaleString() : '');
 
   const taxMethod = data.taxMethod || 'business';
   const taxRateDesc = taxMethod === 'business' ? '3.3% 공제' : '일용직 근로소득세 공제';
@@ -124,8 +124,8 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
           <h3 className="font-bold mb-2">제2조 [근로장소 및 업무내용]</h3>
           <ol className="list-decimal pl-8 space-y-1">
             <li>
-              근무장소: <span className="font-semibold">{data.hospitalName || '________________'}</span>
-              ({data.hospitalAddress || '________________'})
+              근무장소: <span className="font-semibold">{data.hospitalName || ''}</span>
+              ({data.hospitalAddress || ''})
             </li>
             <li>업무내용: 외래 진료, 병동 환자 관리 및 기타 병원이 지정하는 진료 관련 업무</li>
           </ol>
@@ -134,7 +134,7 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
         <section>
           <h3 className="font-bold mb-2">제3조 [근로일 및 근로시간]</h3>
           <ol className="list-decimal pl-8 space-y-1">
-            <li>근로일: <span className="font-semibold">{formattedWorkDates || '________________'}</span></li>
+            <li>근로일: <span className="font-semibold">{formattedWorkDates || ''}</span></li>
             <li>
               근로시간: <span className="font-semibold">{data.startTime || '09:00'}</span> 부터{' '}
               <span className="font-semibold">{data.endTime || '18:00'}</span> 까지
@@ -225,7 +225,7 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
         </h1>
 
         <p className="mb-6 text-justify">
-          <strong>{data.hospitalName || '________'}</strong>(이하 "병원"이라 함)은(는) 근로계약 체결 및 이행을 위하여
+          <strong>{data.hospitalName || ''}</strong>(이하 "병원"이라 함)은(는) 근로계약 체결 및 이행을 위하여
           「개인정보 보호법」 제15조 및 제17조에 따라 아래와 같이 귀하의 개인정보를 수집 · 이용 및 제3자에게 제공하고자 합니다.
           내용을 자세히 읽으신 후 동의 여부를 결정하여 주십시오.
         </p>
@@ -283,7 +283,7 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
           </h1>
 
           <p className="mb-6 text-justify">
-            본인은 <strong>{data.hospitalName || '________'}</strong>(이하 "병원"이라 함)에서 근무함에 있어,
+            본인은 <strong>{data.hospitalName || ''}</strong>(이하 "병원"이라 함)에서 근무함에 있어,
             업무 수행 중 알게 된 환자의 개인정보 및 병원의 영업비밀을 보호하기 위하여 다음과 같이 서약합니다.
           </p>
 
@@ -426,7 +426,7 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
             <p className="mb-4 font-bold text-lg">귀하의 노고에 깊이 감사드립니다.</p>
             <p className="mb-8">{contractDate}</p>
             <div className="flex justify-center items-center gap-4">
-              <span className="font-bold text-lg">{data.hospitalName || '________'} 대표 {data.directorName || '________'}</span>
+              <span className="font-bold text-lg">{data.hospitalName || ''} 대표 {data.directorName || ''}</span>
               <div className="flex items-center justify-center" style={{ width: '150px', height: '100px' }}>
                 <SignatureImage src={data.hospitalSignatureUrl} alt="병원 서명" />
               </div>
@@ -503,7 +503,7 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
           </div>
 
           <div className="mt-16">
-            <h4 className="font-bold text-lg text-center">{data.hospitalName || '________'} 귀중</h4>
+            <h4 className="font-bold text-lg text-center">{data.hospitalName || ''} 귀중</h4>
           </div>
         </div>
       )}

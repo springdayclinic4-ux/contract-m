@@ -40,8 +40,8 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
 
   // 급여 표시 로직
   const displayWage = data.wage_type === 'gross' 
-    ? (data.wage_gross ? Number(data.wage_gross).toLocaleString() : '__________')
-    : (data.wage_net ? Number(data.wage_net).toLocaleString() : '__________');
+    ? (data.wage_gross ? Number(data.wage_gross).toLocaleString() : '')
+    : (data.wage_net ? Number(data.wage_net).toLocaleString() : '');
   
   const taxRateDesc = data.tax_method === 'business' ? '3.3% 공제' : '일용직 근로소득세 공제';
   const displayWageType = data.wage_type === 'gross'
@@ -102,7 +102,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
           <section>
             <h3 className="font-bold mb-1">제2조 [근로장소 및 업무내용]</h3>
             <ol className="list-decimal pl-5 space-y-1">
-              <li>근무장소: {data.hospital_name || '________________'} ({data.hospital_address || '________________'})</li>
+              <li>근무장소: {data.hospital_name || ''} ({data.hospital_address || ''})</li>
               <li>업무내용: 외래 진료, 병동 환자 관리 및 기타 병원이 지정하는 진료 관련 업무</li>
             </ol>
           </section>
@@ -182,7 +182,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
         </h1>
 
         <p className="mb-6 text-justify">
-          <strong>{data.hospital_name || '________'}</strong>(이하 "병원"이라 함)은(는) 근로계약 체결 및 이행을 위하여 
+          <strong>{data.hospital_name || ''}</strong>(이하 "병원"이라 함)은(는) 근로계약 체결 및 이행을 위하여 
           「개인정보 보호법」 제15조 및 제17조에 따라 아래와 같이 귀하의 개인정보를 수집 · 이용 및 제3자에게 제공하고자 합니다. 
           내용을 자세히 읽으신 후 동의 여부를 결정하여 주십시오.
         </p>
@@ -260,7 +260,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
           </h1>
 
           <p className="mb-6 text-justify">
-            본인은 <strong>{data.hospital_name || '________'}</strong>(이하 "병원"이라 함)에서 근무함에 있어, 
+            본인은 <strong>{data.hospital_name || ''}</strong>(이하 "병원"이라 함)에서 근무함에 있어, 
             업무 수행 중 알게 된 환자의 개인정보 및 병원의 영업비밀을 보호하기 위하여 다음과 같이 서약합니다.
           </p>
 
