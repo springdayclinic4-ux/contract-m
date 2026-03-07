@@ -11,6 +11,19 @@ export default function RegisterEmployeeForm() {
   const [email, setEmail] = useState('');
   const [verified, setVerified] = useState(false);
 
+  const formatPhone = (value: string) => {
+    const nums = value.replace(/[^0-9]/g, '').slice(0, 11);
+    if (nums.startsWith('02')) {
+      if (nums.length <= 2) return nums;
+      if (nums.length <= 5) return `${nums.slice(0, 2)}-${nums.slice(2)}`;
+      if (nums.length <= 9) return `${nums.slice(0, 2)}-${nums.slice(2, 5)}-${nums.slice(5)}`;
+      return `${nums.slice(0, 2)}-${nums.slice(2, 6)}-${nums.slice(6)}`;
+    }
+    if (nums.length <= 3) return nums;
+    if (nums.length <= 7) return `${nums.slice(0, 3)}-${nums.slice(3)}`;
+    return `${nums.slice(0, 3)}-${nums.slice(3, 7)}-${nums.slice(7)}`;
+  };
+
   const [formData, setFormData] = useState<RegisterEmployeeRequest>({
     email: '',
     password: '',
@@ -121,7 +134,7 @@ export default function RegisterEmployeeForm() {
         <input
           type="tel"
           value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
           className="input-field"
           placeholder="010-1234-5678"
         />

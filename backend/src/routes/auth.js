@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import prisma from '../config/database.js';
 import { generateUUID, generateRandomString } from '../utils/crypto.js';
-import { sendVerificationEmail } from '../utils/email.js';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email.js';
 import { signAccessToken, signRefreshToken } from '../utils/jwt.js';
 import { zodValidation } from '../middleware/zodValidation.js';
 import {
@@ -471,6 +471,135 @@ async function authRoutes(fastify, options) {
         refreshToken
       }
     };
+  });
+
+  /**
+   * 비밀번호 찾기 - 인증 코드 발송
+   * POST /api/auth/forgot-password
+   */
+  fastify.post('/forgot-password', async (request, reply) => {
+    const { email, user_type } = request.body;
+
+    if (!email || !user_type) {
+      return reply.status(400).send({
+        success: false,
+        message: '이메일과 사용자 유형을 입력해주세요.'
+      });
+    }
+
+    // 사용자 존재 확인
+    let user;
+    switch (user_type) {
+      case 'hospital':
+        user = await prisma.hospital.findUnique({ where: { email } });
+        break;
+      case 'doctor':
+        user = await prisma.doctor.findUnique({ where: { email } });
+        break;
+      case 'employee':
+        user = await prisma.employee.findUnique({ where: { email } });
+        break;
+    }
+
+    if (!user) {
+      // 보안상 사용자가 없어도 성공 응답
+      return { success: true, message: '인증 코드가 발송되었습니다.' };
+    }
+
+    // 인증 코드 생성
+    const resetCode = generateRandomString(6);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    // 기존 코드 삭제
+    await prisma.emailVerification.deleteMany({
+      where: { email }
+    });
+
+    // 새 코드 저장
+    await prisma.emailVerification.create({
+      data: {
+        email,
+        verificationCode: resetCode,
+        expiresAt
+      }
+    });
+
+    // 이메일 발송
+    await sendPasswordResetEmail(email, resetCode);
+
+    return { success: true, message: '인증 코드가 발송되었습니다.' };
+  });
+
+  /**
+   * 비밀번호 재설정
+   * POST /api/auth/reset-password
+   */
+  fastify.post('/reset-password', async (request, reply) => {
+    const { email, user_type, verification_code, new_password } = request.body;
+
+    if (!email || !user_type || !verification_code || !new_password) {
+      return reply.status(400).send({
+        success: false,
+        message: '모든 필드를 입력해주세요.'
+      });
+    }
+
+    if (new_password.length < 8) {
+      return reply.status(400).send({
+        success: false,
+        message: '비밀번호는 최소 8자 이상이어야 합니다.'
+      });
+    }
+
+    // 인증 코드 확인
+    const verification = await prisma.emailVerification.findFirst({
+      where: {
+        email,
+        verificationCode: verification_code,
+        expiresAt: { gt: new Date() },
+        verified: false
+      }
+    });
+
+    if (!verification) {
+      return reply.status(400).send({
+        success: false,
+        message: '유효하지 않거나 만료된 인증 코드입니다.'
+      });
+    }
+
+    // 비밀번호 해시
+    const passwordHash = await bcrypt.hash(new_password, 10);
+
+    // 비밀번호 업데이트
+    switch (user_type) {
+      case 'hospital':
+        await prisma.hospital.update({
+          where: { email },
+          data: { passwordHash }
+        });
+        break;
+      case 'doctor':
+        await prisma.doctor.update({
+          where: { email },
+          data: { passwordHash }
+        });
+        break;
+      case 'employee':
+        await prisma.employee.update({
+          where: { email },
+          data: { passwordHash }
+        });
+        break;
+    }
+
+    // 인증 코드 사용 완료 처리
+    await prisma.emailVerification.update({
+      where: { id: verification.id },
+      data: { verified: true }
+    });
+
+    return { success: true, message: '비밀번호가 변경되었습니다.' };
   });
 
   /**

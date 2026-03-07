@@ -60,6 +60,49 @@ export async function sendVerificationEmail(email, verificationCode) {
 }
 
 /**
+ * 비밀번호 재설정 이메일 발송
+ */
+export async function sendPasswordResetEmail(email, resetCode) {
+  if (useMockEmail || !transporter) {
+    console.log('\n========================================');
+    console.log('[MOCK] 비밀번호 재설정 코드');
+    console.log(`받는 사람: ${email}`);
+    console.log(`재설정 코드: ${resetCode}`);
+    console.log('========================================\n');
+    return { success: true, messageId: 'mock-mode' };
+  }
+
+  const mailOptions = {
+    from: `"HOS 계약관리" <${gmailUser}>`,
+    to: email,
+    subject: '[HOS] 비밀번호 재설정 코드',
+    html: `
+      <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; max-width: 500px; margin: 0 auto; padding: 30px; border: 1px solid #e5e7eb; border-radius: 12px;">
+        <h2 style="color: #1e40af; margin-bottom: 20px;">비밀번호 재설정</h2>
+        <p>안녕하세요, HOS 계약관리 시스템입니다.</p>
+        <p>비밀번호 재설정을 위한 인증 코드입니다.</p>
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 25px; text-align: center; margin: 25px 0; border-radius: 8px;">
+          <h1 style="color: #fff; letter-spacing: 8px; margin: 0; font-size: 32px;">${resetCode}</h1>
+        </div>
+        <p style="color: #6b7280; font-size: 14px;">이 코드는 <strong>10분간</strong> 유효합니다.</p>
+        <p style="color: #6b7280; font-size: 14px;">본인이 요청한 것이 아니라면 이 이메일을 무시하세요.</p>
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <p style="color: #9ca3af; font-size: 12px;">HOS Contract Management System</p>
+      </div>
+    `,
+  };
+
+  try {
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`[EMAIL] 비밀번호 재설정 코드 발송 완료: ${email}`);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('[EMAIL] 발송 실패:', error.message);
+    throw new Error('이메일 발송에 실패했습니다.');
+  }
+}
+
+/**
  * 계약서 초대 이메일 발송
  */
 export async function sendContractInvitationEmail(email, invitationToken, contractType = 'contract') {

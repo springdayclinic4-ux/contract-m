@@ -16,6 +16,27 @@ export default function RegisterHospitalForm() {
   const [verified, setVerified] = useState(false);
 
   // 회원가입 폼
+  // 자동 하이픈 포맷 함수
+  const formatBusinessNumber = (value: string) => {
+    const nums = value.replace(/[^0-9]/g, '').slice(0, 10);
+    if (nums.length <= 3) return nums;
+    if (nums.length <= 5) return `${nums.slice(0, 3)}-${nums.slice(3)}`;
+    return `${nums.slice(0, 3)}-${nums.slice(3, 5)}-${nums.slice(5)}`;
+  };
+
+  const formatPhone = (value: string) => {
+    const nums = value.replace(/[^0-9]/g, '').slice(0, 11);
+    if (nums.startsWith('02')) {
+      if (nums.length <= 2) return nums;
+      if (nums.length <= 5) return `${nums.slice(0, 2)}-${nums.slice(2)}`;
+      if (nums.length <= 9) return `${nums.slice(0, 2)}-${nums.slice(2, 5)}-${nums.slice(5)}`;
+      return `${nums.slice(0, 2)}-${nums.slice(2, 6)}-${nums.slice(6)}`;
+    }
+    if (nums.length <= 3) return nums;
+    if (nums.length <= 7) return `${nums.slice(0, 3)}-${nums.slice(3)}`;
+    return `${nums.slice(0, 3)}-${nums.slice(3, 7)}-${nums.slice(7)}`;
+  };
+
   const [formData, setFormData] = useState<RegisterHospitalRequest>({
     email: '',
     password: '',
@@ -176,7 +197,7 @@ export default function RegisterHospitalForm() {
         <input
           type="text"
           value={formData.business_registration_number}
-          onChange={(e) => setFormData({ ...formData, business_registration_number: e.target.value })}
+          onChange={(e) => setFormData({ ...formData, business_registration_number: formatBusinessNumber(e.target.value) })}
           className="input-field"
           placeholder="000-00-00000"
           required
@@ -228,7 +249,7 @@ export default function RegisterHospitalForm() {
         <input
           type="tel"
           value={formData.hospital_phone}
-          onChange={(e) => setFormData({ ...formData, hospital_phone: e.target.value })}
+          onChange={(e) => setFormData({ ...formData, hospital_phone: formatPhone(e.target.value) })}
           className="input-field"
           placeholder="02-1234-5678"
           required
@@ -252,7 +273,7 @@ export default function RegisterHospitalForm() {
           <input
             type="tel"
             value={formData.manager_phone}
-            onChange={(e) => setFormData({ ...formData, manager_phone: e.target.value })}
+            onChange={(e) => setFormData({ ...formData, manager_phone: formatPhone(e.target.value) })}
             className="input-field"
             placeholder="010-1234-5678"
           />

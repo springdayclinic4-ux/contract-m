@@ -238,6 +238,10 @@ export default function ContractInvitationPage() {
     specialConditions: contract.specialConditions,
     createdAt: contract.createdAt,
     signatureImageUrl: contract.signatureImageUrl,
+    hospitalSignatureUrl: contract.hospitalSignatureUrl,
+    includeSecurityPledge: contract.includeSecurityPledge !== false,
+    includePayStub: contract.includePayStub !== false,
+    includeCrimeCheck: contract.includeCrimeCheck !== false,
   } : null;
 
   return (

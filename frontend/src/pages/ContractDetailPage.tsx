@@ -235,6 +235,9 @@ export default function ContractDetailPage() {
     createdAt: contract.createdAt,
     signatureImageUrl: contract.signatureImageUrl,
     hospitalSignatureUrl: contract.hospitalSignatureUrl,
+    includeSecurityPledge: contract.includeSecurityPledge !== false,
+    includePayStub: contract.includePayStub !== false,
+    includeCrimeCheck: contract.includeCrimeCheck !== false,
   } : {
     contractNumber: contract.contractNumber,
     hospitalName: contract.hospitalName || '',

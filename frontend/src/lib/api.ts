@@ -83,6 +83,14 @@ export const authAPI = {
   // 로그아웃
   logout: () =>
     api.post('/auth/logout'),
+
+  // 비밀번호 찾기 - 인증 코드 발송
+  forgotPassword: (email: string, user_type: string) =>
+    api.post('/auth/forgot-password', { email, user_type }),
+
+  // 비밀번호 재설정
+  resetPassword: (email: string, user_type: string, verification_code: string, new_password: string) =>
+    api.post('/auth/reset-password', { email, user_type, verification_code, new_password }),
 };
 
 // 계약서 API
