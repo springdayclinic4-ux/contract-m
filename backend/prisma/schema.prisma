@@ -139,6 +139,7 @@ model Contract {
   wageGross               Decimal? @map("wage_gross") @db.Decimal(15, 2)
   wageNet                 Decimal? @map("wage_net") @db.Decimal(15, 2)
   wageType                String?  @map("wage_type") // 'gross' | 'net'
+  taxMethod               String?  @map("tax_method") // 'business' | 'daily'
   specialConditions       String?  @map("special_conditions")
   includeSecurityPledge   Boolean  @default(true) @map("include_security_pledge")
   includePayStub          Boolean  @default(true) @map("include_pay_stub")

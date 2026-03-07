@@ -239,6 +239,7 @@ export default function ContractInvitationPage() {
     createdAt: contract.createdAt,
     signatureImageUrl: contract.signatureImageUrl,
     hospitalSignatureUrl: contract.hospitalSignatureUrl,
+    taxMethod: contract.taxMethod || 'business',
     includeSecurityPledge: contract.includeSecurityPledge !== false,
     includePayStub: contract.includePayStub !== false,
     includeCrimeCheck: contract.includeCrimeCheck !== false,

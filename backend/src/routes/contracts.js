@@ -44,7 +44,8 @@ async function contractRoutes(fastify, options) {
       special_conditions,
       include_security_pledge,
       include_pay_stub,
-      include_crime_check
+      include_crime_check,
+      tax_method
     } = request.body;
 
     // 계약서 번호 생성 (YYYYMMDD-UUID)
@@ -69,6 +70,7 @@ async function contractRoutes(fastify, options) {
         wageGross: wage_gross ? parseFloat(wage_gross) : null,
         wageNet: wage_net ? parseFloat(wage_net) : null,
         wageType: wage_type || null,
+        taxMethod: tax_method || 'business',
         specialConditions: special_conditions || null,
         includeSecurityPledge: include_security_pledge !== false,
         includePayStub: include_pay_stub !== false,
@@ -876,6 +878,14 @@ async function contractRoutes(fastify, options) {
         return reply.status(403).send({
           success: false,
           message: '접근 권한이 없습니다.'
+        });
+      }
+
+      // 병원과 의사 모두 서명 완료된 계약서는 삭제 불가
+      if (contract.hospitalSignatureUrl && contract.signatureImageUrl) {
+        return reply.status(400).send({
+          success: false,
+          message: '양측 서명이 완료된 계약서는 삭제할 수 없습니다.'
         });
       }
 

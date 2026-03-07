@@ -235,6 +235,7 @@ export default function ContractDetailPage() {
     createdAt: contract.createdAt,
     signatureImageUrl: contract.signatureImageUrl,
     hospitalSignatureUrl: contract.hospitalSignatureUrl,
+    taxMethod: contract.taxMethod || 'business',
     includeSecurityPledge: contract.includeSecurityPledge !== false,
     includePayStub: contract.includePayStub !== false,
     includeCrimeCheck: contract.includeCrimeCheck !== false,
@@ -372,12 +373,19 @@ export default function ContractDetailPage() {
           <button onClick={handlePrint} className="btn-primary px-6">
             인쇄 / PDF 저장
           </button>
-          <button
-            onClick={handleDelete}
-            className="btn-outline text-red-600 border-red-600 hover:bg-red-50 px-6"
-          >
-            삭제
-          </button>
+          {!(contract.hospitalSignatureUrl && contract.signatureImageUrl) && (
+            <button
+              onClick={handleDelete}
+              className="btn-outline text-red-600 border-red-600 hover:bg-red-50 px-6"
+            >
+              삭제
+            </button>
+          )}
+          {contract.hospitalSignatureUrl && contract.signatureImageUrl && (
+            <span className="px-4 py-2 bg-gray-100 text-gray-500 rounded-full text-sm font-semibold">
+              양측 서명 완료 (삭제 불가)
+            </span>
+          )}
         </div>
       </div>
     </div>
