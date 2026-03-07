@@ -146,40 +146,29 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
           </section>
         </div>
 
-        <div className="mt-10">
-          <p className="text-center mb-6 text-base">{today}</p>
+        <div className="mt-8">
+          <p className="text-center mb-4 text-base">{today}</p>
 
           <div className="flex justify-between items-start gap-8">
-            <div className="w-1/2 space-y-2">
+            <div className="w-1/2 space-y-1">
               <h4 className="font-bold text-base mb-2 text-center">"갑" (사업주)</h4>
               <div className="flex"><span className="w-20 text-gray-600 shrink-0">상 호</span><span>: {data.hospital_name}</span></div>
               <div className="flex"><span className="w-20 text-gray-600 shrink-0">주 소</span><span>: {data.hospital_address}</span></div>
-              <div className="flex h-14"></div>
-              <div className="flex items-center mt-4 relative">
+              <div className="flex items-center mt-2">
                 <span className="w-20 text-gray-600 shrink-0">성 명</span>
-                <div className="flex-1 flex justify-between items-center border-b border-gray-300 pb-1">
-                  <span>: {data.director_name}</span>
-                  <div className="relative w-16 h-16 flex items-center justify-center -my-2">
-                    <span className="text-gray-400 text-sm">(인/서명)</span>
-                  </div>
-                </div>
+                <span className="border-b border-gray-300 flex-1 pb-1">: {data.director_name} <span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
               </div>
             </div>
 
-            <div className="w-1/2 space-y-2">
+            <div className="w-1/2 space-y-1">
               <h4 className="font-bold text-base mb-2 text-center">"을" (근로자)</h4>
               <div className="flex"><span className="w-20 text-gray-600 shrink-0">주 소</span><span>: {data.doctor_address}</span></div>
               <div className="flex"><span className="w-20 text-gray-600 shrink-0">연락처</span><span>: {data.doctor_phone}</span></div>
               <div className="flex"><span className="w-24 text-gray-600 shrink-0">주민등록번호</span><span>: {data.doctor_registration_number}</span></div>
               <div className="flex"><span className="w-20 text-gray-600 shrink-0">면허번호</span><span>: {data.doctor_license_number}</span></div>
-              <div className="flex items-center mt-4 relative">
+              <div className="flex items-center mt-2">
                 <span className="w-20 text-gray-600 shrink-0">성 명</span>
-                <div className="flex-1 flex justify-between items-center border-b border-gray-300 pb-1">
-                  <span>: {data.doctor_name}</span>
-                  <div className="relative w-16 h-16 flex items-center justify-center -my-2">
-                    <span className="text-gray-400 text-sm">(인/서명)</span>
-                  </div>
-                </div>
+                <span className="border-b border-gray-300 flex-1 pb-1">: {data.doctor_name} <span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
               </div>
             </div>
           </div>
@@ -247,21 +236,16 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
           </div>
         </div>
 
-        <div className="mt-10">
-          <p className="text-center mb-8 text-base">{today}</p>
-          
+        <div className="mt-8">
+          <p className="text-center mb-6 text-base">{today}</p>
+
           <div className="flex justify-end pr-8">
-            <div className="w-1/2 space-y-2">
+            <div className="w-1/2 space-y-1">
               <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: {data.doctor_name}</span></div>
               <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">주민등록번호</span><span>: {data.doctor_registration_number}</span></div>
-              <div className="flex items-center mt-4 relative">
+              <div className="flex items-center mt-2">
                 <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
-                <div className="flex-1 flex justify-between items-center border-b border-gray-300 pb-1">
-                  <span></span>
-                  <div className="relative w-16 h-16 flex items-center justify-center -my-2">
-                    <span className="text-gray-400 text-sm">(인/서명)</span>
-                  </div>
-                </div>
+                <span className="border-b border-gray-300 flex-1 pb-1"><span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
               </div>
             </div>
           </div>
@@ -322,21 +306,16 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
             </div>
           </div>
 
-          <div className="mt-16">
-            <p className="text-center mb-8 text-base">{today}</p>
-            
+          <div className="mt-8">
+            <p className="text-center mb-6 text-base">{today}</p>
+
             <div className="flex justify-end pr-8">
-              <div className="w-1/2 space-y-2">
+              <div className="w-1/2 space-y-1">
                 <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">소 속</span><span>: 진료부 (대진의)</span></div>
                 <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: {data.doctor_name}</span></div>
-                <div className="flex items-center mt-4 relative">
+                <div className="flex items-center mt-2">
                   <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
-                  <div className="flex-1 flex justify-between items-center border-b border-gray-300 pb-1">
-                    <span></span>
-                    <div className="relative w-16 h-16 flex items-center justify-center -my-2">
-                      <span className="text-gray-400 text-sm">(인/서명)</span>
-                    </div>
-                  </div>
+                  <span className="border-b border-gray-300 flex-1 pb-1"><span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
                 </div>
               </div>
             </div>
@@ -440,9 +419,9 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
             </p>
           </div>
 
-          <div className="mt-16 text-center">
-            <p className="mb-4 font-bold text-lg">귀하의 노고에 깊이 감사드립니다.</p>
-            <p className="mb-8">{today}</p>
+          <div className="mt-8 text-center">
+            <p className="mb-3 font-bold text-lg">귀하의 노고에 깊이 감사드립니다.</p>
+            <p className="mb-4">{today}</p>
             <div className="inline-block relative">
               <span className="font-bold text-lg mr-8">{data.hospital_name} 대표 {data.director_name} (인/서명)</span>
             </div>
@@ -506,26 +485,21 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
             </div>
           </div>
 
-          <div className="mt-8 text-center">
-            <p className="text-center mb-8 text-base">{today}</p>
-            
+          <div className="mt-6 text-center">
+            <p className="text-center mb-6 text-base">{today}</p>
+
             <div className="flex justify-end pr-8">
-              <div className="w-1/2 space-y-2">
+              <div className="w-1/2 space-y-1">
                 <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: {data.doctor_name}</span></div>
-                <div className="flex items-center mt-4 relative">
+                <div className="flex items-center mt-2">
                   <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
-                  <div className="flex-1 flex justify-between items-center border-b border-gray-300 pb-1">
-                    <span></span>
-                    <div className="relative w-16 h-16 flex items-center justify-center -my-2">
-                      <span className="text-gray-400 text-sm">(인/서명)</span>
-                    </div>
-                  </div>
+                  <span className="border-b border-gray-300 flex-1 pb-1"><span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-16">
+          <div className="mt-8">
             <h4 className="font-bold text-lg text-center">{data.hospital_name} 귀중</h4>
           </div>
         </div>

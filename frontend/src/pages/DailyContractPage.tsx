@@ -11,12 +11,14 @@ export default function DailyContractPage() {
   const [workDates, setWorkDates] = useState<string[]>([]);
   const [dateInput, setDateInput] = useState('');
 
+  const [manualWage, setManualWage] = useState(false);
+
   const [formData, setFormData] = useState({
     // 병원 정보
     hospital_name: '',
     director_name: '',
     hospital_address: '',
-    
+
     // 의사 정보
     doctor_name: '',
     doctor_email: '',
@@ -26,23 +28,23 @@ export default function DailyContractPage() {
     doctor_address: '',
     bank_name: '',
     account_number: '',
-    
+
     // 근무 조건
     start_time: '09:00',
     end_time: '18:00',
     break_time: '13:00 ~ 14:00 (1시간)',
-    
+
     // 급여
     wage_gross: '',
     wage_net: '',
     wage_type: 'net' as 'gross' | 'net',
     tax_method: 'daily' as 'business' | 'daily',
     special_conditions: '',
-    
+
     // 부가 서류
     include_security_pledge: true,
-    include_pay_stub: true,
-    include_crime_check: true,
+    include_pay_stub: false,
+    include_crime_check: false,
   });
 
   useEffect(() => {
@@ -547,6 +549,44 @@ export default function DailyContractPage() {
                     className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-green-50"
                   />
                 </div>
+              </div>
+
+              {/* 수기 직접입력 토글 */}
+              <div className="border-t border-gray-200 pt-3">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={manualWage}
+                    onChange={(e) => setManualWage(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">세전/세후 금액 직접 입력</span>
+                </label>
+                {manualWage && (
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">세전 금액 (직접입력)</label>
+                      <input
+                        type="number"
+                        value={formData.wage_gross}
+                        onChange={(e) => setFormData(prev => ({ ...prev, wage_gross: e.target.value }))}
+                        placeholder="세전 금액"
+                        className="w-full p-2 border border-orange-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-orange-50 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">세후 금액 (직접입력)</label>
+                      <input
+                        type="number"
+                        value={formData.wage_net}
+                        onChange={(e) => setFormData(prev => ({ ...prev, wage_net: e.target.value }))}
+                        placeholder="실수령액"
+                        className="w-full p-2 border border-orange-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-orange-50 text-sm"
+                      />
+                    </div>
+                    <p className="col-span-2 text-xs text-orange-600">자동 계산 없이 세전/세후 금액을 각각 직접 입력합니다.</p>
+                  </div>
+                )}
               </div>
 
               <div>
