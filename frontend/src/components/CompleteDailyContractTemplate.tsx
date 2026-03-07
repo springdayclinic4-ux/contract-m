@@ -84,7 +84,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
     <div className="p-8 text-black text-sm" style={serifFont}>
       {/* Page 1: 근로계약서 */}
       <div>
-        <h1 className="text-2xl font-bold text-center mb-8" style={{ textDecoration: 'underline', textDecorationThickness: '2px', textUnderlineOffset: '8px' }}>
+        <h1 className="text-2xl font-bold text-center mb-8">
           {data.tax_method === 'business' ? '프리랜서 의사 용역계약서' : '일용직(대진) 의사 근로계약서'}
         </h1>
 
@@ -156,7 +156,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
               <div className="flex"><span className="w-20 text-gray-600 shrink-0">주 소</span><span>: {data.hospital_address}</span></div>
               <div className="flex items-center mt-2">
                 <span className="w-20 text-gray-600 shrink-0">성 명</span>
-                <span className="border-b border-gray-300 flex-1 pb-1">: {data.director_name} <span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
+                <span className="flex-1 pb-1">: {data.director_name} <span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
               </div>
             </div>
 
@@ -168,7 +168,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
               <div className="flex"><span className="w-20 text-gray-600 shrink-0">면허번호</span><span>: {data.doctor_license_number}</span></div>
               <div className="flex items-center mt-2">
                 <span className="w-20 text-gray-600 shrink-0">성 명</span>
-                <span className="border-b border-gray-300 flex-1 pb-1">: {data.doctor_name} <span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
+                <span className="flex-1 pb-1">: {data.doctor_name} <span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
               </div>
             </div>
           </div>
@@ -177,7 +177,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
 
       {/* Page 2: 개인정보 동의서 */}
       <div className="page-break pt-10">
-        <h1 className="text-xl font-bold text-center mb-8" style={{ textDecoration: 'underline', textDecorationThickness: '2px', textUnderlineOffset: '8px' }}>
+        <h1 className="text-xl font-bold text-center mb-8">
           개인정보 수집 · 이용 · 제공 동의서
         </h1>
 
@@ -245,7 +245,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
               <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">주민등록번호</span><span>: {data.doctor_registration_number}</span></div>
               <div className="flex items-center mt-2">
                 <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
-                <span className="border-b border-gray-300 flex-1 pb-1"><span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
+                <span className="flex-1 pb-1"><span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
               </div>
             </div>
           </div>
@@ -255,7 +255,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
       {/* Page 3: 보안 서약서 */}
       {data.include_security_pledge && (
         <div className="page-break pt-10">
-          <h1 className="text-xl font-bold text-center mb-10" style={{ textDecoration: 'underline', textDecorationThickness: '2px', textUnderlineOffset: '8px' }}>
+          <h1 className="text-xl font-bold text-center mb-10">
             개인정보 보호 및 보안 서약서
           </h1>
 
@@ -315,7 +315,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
                 <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: {data.doctor_name}</span></div>
                 <div className="flex items-center mt-2">
                   <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
-                  <span className="border-b border-gray-300 flex-1 pb-1"><span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
+                  <span className="flex-1 pb-1"><span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
                 </div>
               </div>
             </div>
@@ -326,7 +326,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
       {/* Page 4: 급여 명세서 */}
       {data.include_pay_stub && (
         <div className="page-break pt-10">
-          <h1 className="text-xl font-bold text-center mb-4" style={{ textDecoration: 'underline', textDecorationThickness: '2px', textUnderlineOffset: '8px' }}>
+          <h1 className="text-xl font-bold text-center mb-4">
             일용직 급여 명세서
           </h1>
           <p className="text-center text-sm text-gray-500 mb-8">
@@ -369,25 +369,25 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
               <tbody>
                 <tr>
                   <td className="border border-gray-400 p-0 align-top" style={{ height: '192px' }}>
-                    <div className="flex justify-between p-3 border-b border-dashed border-gray-300">
+                    <div className="flex justify-between p-3 border-b-0">
                       <span>기본급 (세전)</span>
                       <span className="font-bold">{gross.toLocaleString()} 원</span>
                     </div>
-                    <div className="flex justify-between p-3 border-b border-dashed border-gray-300 text-gray-400">
+                    <div className="flex justify-between p-3 border-b-0 text-gray-400">
                       <span>식대/기타</span>
                       <span>-</span>
                     </div>
                   </td>
                   <td className="border border-gray-400 p-0 align-top" style={{ height: '192px' }}>
-                    <div className="flex justify-between p-3 border-b border-dashed border-gray-300">
+                    <div className="flex justify-between p-3 border-b-0">
                       <span>{data.tax_method === 'business' ? '사업소득세 (3%)' : '일용근로소득세'}</span>
                       <span className="text-red-600">{incomeTax.toLocaleString()} 원</span>
                     </div>
-                    <div className="flex justify-between p-3 border-b border-dashed border-gray-300">
+                    <div className="flex justify-between p-3 border-b-0">
                       <span>{data.tax_method === 'business' ? '지방소득세 (0.3%)' : '일용지방소득세'}</span>
                       <span className="text-red-600">{localTax.toLocaleString()} 원</span>
                     </div>
-                    <div className="flex justify-between p-3 border-b border-dashed border-gray-300 text-gray-400">
+                    <div className="flex justify-between p-3 border-b-0 text-gray-400">
                       <span>고용보험</span>
                       <span>(일용직 제외)</span>
                     </div>
@@ -432,7 +432,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
       {/* Page 5: 성범죄/아동학대 조회 동의서 */}
       {data.include_crime_check && (
         <div className="page-break pt-10">
-          <h1 className="text-xl font-bold text-center mb-8" style={{ textDecoration: 'underline', textDecorationThickness: '2px', textUnderlineOffset: '8px' }}>
+          <h1 className="text-xl font-bold text-center mb-8">
             성범죄 경력 및 아동학대 관련 범죄 전력 조회 동의서
           </h1>
 
@@ -493,7 +493,7 @@ export default function CompleteDailyContractTemplate({ data }: CompleteDailyCon
                 <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: {data.doctor_name}</span></div>
                 <div className="flex items-center mt-2">
                   <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
-                  <span className="border-b border-gray-300 flex-1 pb-1"><span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
+                  <span className="flex-1 pb-1"><span className="text-gray-400 text-sm float-right">(인/서명)</span></span>
                 </div>
               </div>
             </div>
