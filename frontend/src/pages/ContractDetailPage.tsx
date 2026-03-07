@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { contractAPI } from '../lib/api';
 import DailyContractTemplate from '../components/DailyContractTemplate';
@@ -10,6 +10,13 @@ export default function ContractDetailPage() {
   const [contract, setContract] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showSignPad, setShowSignPad] = useState(false);
+  const [signing, setSigning] = useState(false);
+
+  // 서명 캔버스
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -17,12 +24,44 @@ export default function ContractDetailPage() {
     }
   }, [id]);
 
+  // 캔버스 크기를 컨테이너에 맞춤
+  const resizeCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+
+    const rect = container.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+
+    canvas.width = rect.width * dpr;
+    canvas.height = 200 * dpr;
+    canvas.style.width = `${rect.width}px`;
+    canvas.style.height = '200px';
+
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.scale(dpr, dpr);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#000';
+    }
+  }, []);
+
+  useEffect(() => {
+    if (showSignPad) {
+      setTimeout(resizeCanvas, 50);
+      window.addEventListener('resize', resizeCanvas);
+      return () => window.removeEventListener('resize', resizeCanvas);
+    }
+  }, [showSignPad, resizeCanvas]);
+
   const loadContract = async () => {
     setLoading(true);
     setError('');
     try {
       const { data } = await contractAPI.getDetail(id!);
-      
+
       if (data.success) {
         setContract(data.data);
       }
@@ -34,13 +73,10 @@ export default function ContractDetailPage() {
   };
 
   const handleSend = async () => {
-    if (!confirm('이 계약서를 발송하시겠습니까?')) {
-      return;
-    }
+    if (!confirm('이 계약서를 발송하시겠습니까?')) return;
 
     try {
       const { data } = await contractAPI.send(id!);
-      
       if (data.success) {
         alert('계약서가 발송되었습니다.');
         loadContract();
@@ -51,13 +87,10 @@ export default function ContractDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('정말 삭제하시겠습니까?')) {
-      return;
-    }
+    if (!confirm('정말 삭제하시겠습니까?')) return;
 
     try {
       const { data } = await contractAPI.delete(id!);
-      
       if (data.success) {
         alert('계약서가 삭제되었습니다.');
         navigate('/contracts');
@@ -67,8 +100,89 @@ export default function ContractDetailPage() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
+  // 병원 서명 저장
+  const handleHospitalSign = async () => {
+    if (!canvasRef.current) return;
+    setSigning(true);
+    try {
+      const signatureDataUrl = canvasRef.current.toDataURL('image/png');
+      const { data } = await contractAPI.hospitalSign(id!, signatureDataUrl);
+      if (data.success) {
+        alert('병원 서명이 완료되었습니다.');
+        setShowSignPad(false);
+        loadContract();
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.message || '서명에 실패했습니다.');
+    } finally {
+      setSigning(false);
+    }
+  };
+
+  const handlePrint = () => window.print();
+
+  // 좌표 계산
+  const getPos = (clientX: number, clientY: number) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    const ctx = canvasRef.current?.getContext('2d');
+    if (!ctx) return;
+    const { x, y } = getPos(e.clientX, e.clientY);
+    setIsDrawing(true);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    const ctx = canvasRef.current?.getContext('2d');
+    if (!ctx) return;
+    const { x, y } = getPos(e.clientX, e.clientY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => setIsDrawing(false);
+
+  const startDrawingTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const ctx = canvasRef.current?.getContext('2d');
+    if (!ctx) return;
+    const touch = e.touches[0];
+    const { x, y } = getPos(touch.clientX, touch.clientY);
+    setIsDrawing(true);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const drawTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (!isDrawing) return;
+    const ctx = canvasRef.current?.getContext('2d');
+    if (!ctx) return;
+    const touch = e.touches[0];
+    const { x, y } = getPos(touch.clientX, touch.clientY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const stopDrawingTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    setIsDrawing(false);
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
   };
 
   if (loading) {
@@ -82,14 +196,11 @@ export default function ContractDetailPage() {
   if (error || !contract) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="container-center py-8">
+        <div className="max-w-5xl mx-auto py-8 px-4">
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
             {error || '계약서를 찾을 수 없습니다.'}
           </div>
-          <button
-            onClick={() => navigate('/contracts')}
-            className="btn-outline"
-          >
+          <button onClick={() => navigate('/contracts')} className="btn-outline">
             목록으로
           </button>
         </div>
@@ -101,26 +212,32 @@ export default function ContractDetailPage() {
   const statusText = getStatusText(contract.status);
   const statusColor = getStatusColor(contract.status);
 
-  // 계약서 템플릿에 전달할 데이터 변환
   const contractData = isDaily ? {
     contractNumber: contract.contractNumber,
-    hospitalName: '병원명', // TODO: 실제 병원명 가져오기
+    hospitalName: contract.hospitalName || '',
+    hospitalAddress: contract.hospitalAddress || '',
+    directorName: contract.directorName || '',
     doctorName: contract.doctorName,
     doctorLicenseNumber: contract.doctorLicenseNumber,
     doctorAddress: contract.doctorAddress,
     doctorPhone: contract.doctorPhone,
-    workDates: contract.workDates?.map((d: string) => new Date(d).toLocaleDateString('ko-KR')),
+    doctorRegistrationNumber: contract.doctorRegistrationNumber,
+    workDates: contract.workDates,
     startTime: contract.startTime,
     endTime: contract.endTime,
     breakTime: contract.breakTime,
     wageGross: contract.wageGross,
     wageNet: contract.wageNet,
     wageType: contract.wageType,
+    bankName: contract.doctorBankName,
+    accountNumber: contract.doctorAccountNumber,
     specialConditions: contract.specialConditions,
     createdAt: contract.createdAt,
+    signatureImageUrl: contract.signatureImageUrl,
+    hospitalSignatureUrl: contract.hospitalSignatureUrl,
   } : {
     contractNumber: contract.contractNumber,
-    hospitalName: '병원명', // TODO: 실제 병원명 가져오기
+    hospitalName: contract.hospitalName || '',
     employeeName: contract.employeeName,
     employeeBirthDate: contract.employeeBirthDate,
     employeeAddress: contract.employeeAddress,
@@ -146,7 +263,7 @@ export default function ContractDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 상단 헤더 - 출력 시 숨김 */}
+      {/* 상단 헤더 */}
       <div className="bg-white border-b shadow-sm sticky top-0 z-10 print:hidden">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -162,10 +279,7 @@ export default function ContractDetailPage() {
               <span className={`px-3 py-1 text-sm font-semibold rounded-full ${statusColor}`}>
                 {statusText}
               </span>
-              <button
-                onClick={() => navigate('/contracts')}
-                className="btn-outline"
-              >
+              <button onClick={() => navigate('/contracts')} className="btn-outline">
                 목록으로
               </button>
             </div>
@@ -176,7 +290,6 @@ export default function ContractDetailPage() {
       {/* 계약서 본문 */}
       <div className="max-w-5xl mx-auto py-8 px-4 print:p-0">
         <div className="bg-white rounded-lg shadow-lg mb-6 print:shadow-none print:rounded-none">
-          {/* 실제 계약서 양식 */}
           {isDaily ? (
             <DailyContractTemplate data={contractData} />
           ) : (
@@ -184,28 +297,76 @@ export default function ContractDetailPage() {
           )}
         </div>
 
-        {/* 액션 버튼 - 출력 시 숨김 */}
-        <div className="flex gap-3 justify-center print:hidden">
-          {contract.status === 'draft' && (
-            <>
+        {/* 병원 서명 패드 */}
+        {showSignPad && (
+          <div className="bg-white rounded-lg shadow-lg mb-6 p-6 print:hidden">
+            <h3 className="text-lg font-bold mb-4">병원(갑) 서명</h3>
+            <div ref={containerRef}>
+              <div className="border-2 border-gray-300 rounded-lg overflow-hidden bg-white">
+                <canvas
+                  ref={canvasRef}
+                  className="w-full cursor-crosshair touch-none"
+                  style={{ height: '200px' }}
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={stopDrawing}
+                  onMouseLeave={stopDrawing}
+                  onTouchStart={startDrawingTouch}
+                  onTouchMove={drawTouch}
+                  onTouchEnd={stopDrawingTouch}
+                />
+              </div>
               <button
-                onClick={handleSend}
-                className="btn-primary px-6"
+                type="button"
+                onClick={clearCanvas}
+                className="mt-2 text-sm text-gray-600 hover:text-gray-900"
               >
-                발송하기
+                다시 그리기
+              </button>
+            </div>
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={handleHospitalSign}
+                className="btn-primary flex-1"
+                disabled={signing}
+              >
+                {signing ? '처리 중...' : '서명 완료'}
               </button>
               <button
-                onClick={() => navigate(`/contracts/${isDaily ? 'daily' : 'regular'}/edit/${id}`)}
-                className="btn-outline px-6"
+                onClick={() => setShowSignPad(false)}
+                className="btn-outline flex-1"
+                disabled={signing}
               >
-                수정하기
+                취소
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 액션 버튼 */}
+        <div className="flex gap-3 justify-center print:hidden flex-wrap">
+          {/* 병원 서명 버튼 */}
+          {!contract.hospitalSignatureUrl && (
+            <button
+              onClick={() => setShowSignPad(true)}
+              className="btn-primary px-6 bg-indigo-600 hover:bg-indigo-700"
+            >
+              병원(갑) 서명하기
+            </button>
+          )}
+          {contract.hospitalSignatureUrl && (
+            <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+              병원 서명 완료
+            </span>
+          )}
+          {contract.status === 'draft' && (
+            <>
+              <button onClick={handleSend} className="btn-primary px-6">
+                발송하기
               </button>
             </>
           )}
-          <button
-            onClick={handlePrint}
-            className="btn-primary px-6"
-          >
+          <button onClick={handlePrint} className="btn-primary px-6">
             인쇄 / PDF 저장
           </button>
           <button

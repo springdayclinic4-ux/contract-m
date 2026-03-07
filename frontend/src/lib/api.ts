@@ -119,6 +119,10 @@ export const contractAPI = {
   reject: (token: string, rejection_reason: string) =>
     api.post(`/contracts/invitation/${token}/reject`, { rejection_reason }),
 
+  // 병원(갑) 서명
+  hospitalSign: (id: string, hospital_signature_url: string) =>
+    api.post(`/contracts/${id}/hospital-sign`, { hospital_signature_url }),
+
   // 계약서 삭제
   delete: (id: string) =>
     api.delete(`/contracts/${id}`),

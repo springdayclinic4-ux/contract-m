@@ -147,6 +147,7 @@ model Contract {
   sentAt                  DateTime? @map("sent_at")
   signedAt                DateTime? @map("signed_at")
   signatureImageUrl       String?  @map("signature_image_url")
+  hospitalSignatureUrl    String?  @map("hospital_signature_url")
   rejectionReason         String?  @map("rejection_reason")
   signedPdfUrl            String?  @map("signed_pdf_url")
   createdAt               DateTime @default(now()) @map("created_at")

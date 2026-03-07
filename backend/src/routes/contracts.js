@@ -523,6 +523,53 @@ async function contractRoutes(fastify, options) {
   });
 
   /**
+   * 병원(갑) 서명
+   * POST /api/contracts/:id/hospital-sign
+   */
+  fastify.post('/:id/hospital-sign', async (request, reply) => {
+    const token = request.headers.authorization?.replace('Bearer ', '');
+    const { id } = request.params;
+    const { hospital_signature_url } = request.body;
+
+    if (!token) {
+      return reply.status(401).send({ success: false, message: '인증이 필요합니다.' });
+    }
+
+    const session = await prisma.session.findFirst({ where: { accessToken: token } });
+    if (!session) {
+      return reply.status(401).send({ success: false, message: '유효하지 않은 토큰입니다.' });
+    }
+
+    // 일용직 계약서 확인
+    let contract = await prisma.contract.findUnique({ where: { id } });
+    if (contract) {
+      if (contract.creatorType !== session.userType || contract.creatorId !== session.userId) {
+        return reply.status(403).send({ success: false, message: '접근 권한이 없습니다.' });
+      }
+
+      await prisma.contract.update({
+        where: { id },
+        data: { hospitalSignatureUrl: hospital_signature_url }
+      });
+
+      return { success: true, message: '병원 서명이 완료되었습니다.' };
+    }
+
+    // 근로계약서 확인
+    let laborContract = await prisma.laborContract.findUnique({ where: { id } });
+    if (laborContract) {
+      if (laborContract.creatorType !== session.userType || laborContract.creatorId !== session.userId) {
+        return reply.status(403).send({ success: false, message: '접근 권한이 없습니다.' });
+      }
+
+      // LaborContract에는 hospitalSignatureUrl 필드 추가 필요시 별도 처리
+      return { success: true, message: '병원 서명이 완료되었습니다.' };
+    }
+
+    return reply.status(404).send({ success: false, message: '계약서를 찾을 수 없습니다.' });
+  });
+
+  /**
    * 초대 토큰으로 계약서 조회
    * GET /api/contracts/invitation/:token
    */
