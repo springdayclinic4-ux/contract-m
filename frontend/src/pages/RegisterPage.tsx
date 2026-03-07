@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import RegisterHospitalForm from '../components/RegisterHospitalForm';
 import RegisterDoctorForm from '../components/RegisterDoctorForm';
 import RegisterEmployeeForm from '../components/RegisterEmployeeForm';
 import type { UserType } from '../types';
 
 export default function RegisterPage() {
-  const [userType, setUserType] = useState<UserType>('hospital');
+  const [searchParams] = useSearchParams();
+  const redirect = searchParams.get('redirect');
+  // invitation 링크에서 왔으면 의사 타입을 기본으로
+  const defaultType = redirect?.includes('/invitation/') ? 'doctor' : 'hospital';
+  const [userType, setUserType] = useState<UserType>(defaultType as UserType);
 
   return (
     <div className="min-h-screen gradient-bg py-12 px-4">
@@ -74,7 +78,7 @@ export default function RegisterPage() {
           {/* 회원가입 폼 */}
           <div>
             {userType === 'hospital' && <RegisterHospitalForm />}
-            {userType === 'doctor' && <RegisterDoctorForm />}
+            {userType === 'doctor' && <RegisterDoctorForm redirectAfter={redirect} />}
             {userType === 'employee' && <RegisterEmployeeForm />}
           </div>
 

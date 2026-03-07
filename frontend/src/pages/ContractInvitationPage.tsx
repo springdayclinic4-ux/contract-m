@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { contractAPI } from '../lib/api';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { contractAPI, authAPI } from '../lib/api';
 import DailyContractTemplate from '../components/DailyContractTemplate';
 
 export default function ContractInvitationPage() {
@@ -13,10 +13,32 @@ export default function ContractInvitationPage() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [signing, setSigning] = useState(false);
 
+  // 로그인 상태 확인
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginMode, setLoginMode] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
+
   // 서명 캔버스
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+
+  // 로그인 상태 체크
+  useEffect(() => {
+    const accessToken = localStorage.getItem('accessToken');
+    const userStr = localStorage.getItem('user');
+    if (accessToken && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.type === 'doctor') {
+          setIsLoggedIn(true);
+        }
+      } catch {}
+    }
+  }, []);
 
   useEffect(() => {
     if (token) {
@@ -24,7 +46,7 @@ export default function ContractInvitationPage() {
     }
   }, [token]);
 
-  // 캔버스 크기를 컨테이너에 맞춤 (좌표 불일치 해결)
+  // 캔버스 크기를 컨테이너에 맞춤
   const resizeCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const container = containerRef.current;
@@ -73,8 +95,40 @@ export default function ContractInvitationPage() {
     }
   };
 
+  // 의사 로그인 처리
+  const handleDoctorLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    setLoginLoading(true);
+
+    try {
+      const { data } = await authAPI.login(loginEmail, loginPassword, 'doctor');
+      const payload = data?.data;
+
+      if (data?.success && payload?.accessToken && payload?.user) {
+        localStorage.setItem('accessToken', payload.accessToken);
+        localStorage.setItem('user', JSON.stringify(payload.user));
+        setIsLoggedIn(true);
+        setLoginMode(false);
+      } else {
+        setLoginError(data?.message || '로그인에 실패했습니다.');
+      }
+    } catch (err: any) {
+      setLoginError(err.response?.data?.message || '로그인에 실패했습니다. 의사 계정으로 가입되어 있는지 확인해주세요.');
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
   const handleSign = async () => {
     if (!canvasRef.current) return;
+
+    // 로그인 확인
+    if (!isLoggedIn) {
+      setLoginMode(true);
+      setMode('view');
+      return;
+    }
 
     setSigning(true);
     try {
@@ -116,18 +170,14 @@ export default function ContractInvitationPage() {
     }
   };
 
-  // 좌표 계산 (DPR 보정)
+  // 좌표 계산
   const getPos = (clientX: number, clientY: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    return {
-      x: clientX - rect.left,
-      y: clientY - rect.top,
-    };
+    return { x: clientX - rect.left, y: clientY - rect.top };
   };
 
-  // 마우스 이벤트
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const ctx = canvasRef.current?.getContext('2d');
     if (!ctx) return;
@@ -146,11 +196,8 @@ export default function ContractInvitationPage() {
     ctx.stroke();
   };
 
-  const stopDrawing = () => {
-    setIsDrawing(false);
-  };
+  const stopDrawing = () => setIsDrawing(false);
 
-  // 터치 이벤트
   const startDrawingTouch = (e: React.TouchEvent<HTMLCanvasElement>) => {
     e.preventDefault();
     const ctx = canvasRef.current?.getContext('2d');
@@ -266,6 +313,109 @@ export default function ContractInvitationPage() {
             )}
           </div>
 
+          {/* 로그인 필요 안내 */}
+          {!isLoggedIn && canSign && (
+            <div className="mb-6 p-5 bg-amber-50 border-2 border-amber-300 rounded-xl">
+              <div className="flex items-start gap-3">
+                <svg className="w-6 h-6 text-amber-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <div>
+                  <h3 className="font-bold text-amber-800 mb-1">의사 계정 로그인이 필요합니다</h3>
+                  <p className="text-sm text-amber-700 mb-3">
+                    계약서 서명을 위해서는 의사 계정으로 로그인해야 합니다.
+                    계정이 없으시면 먼저 회원가입을 해주세요.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setLoginMode(true)}
+                      className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-amber-700 transition-colors"
+                    >
+                      의사 로그인
+                    </button>
+                    <Link
+                      to={`/register?redirect=/contracts/invitation/${token}`}
+                      className="bg-white text-amber-700 border border-amber-400 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-amber-50 transition-colors"
+                    >
+                      회원가입
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 의사 로그인 폼 (인라인) */}
+          {loginMode && !isLoggedIn && (
+            <div className="mb-6 p-6 bg-white border-2 border-indigo-200 rounded-xl shadow-sm">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">의사 계정 로그인</h3>
+              <form onSubmit={handleDoctorLogin} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">이메일</label>
+                  <input
+                    type="email"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    className="input-field"
+                    placeholder="doctor@example.com"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호</label>
+                  <input
+                    type="password"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    className="input-field"
+                    placeholder="비밀번호"
+                    required
+                  />
+                </div>
+                {loginError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                    {loginError}
+                  </div>
+                )}
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    className="btn-primary flex-1"
+                    disabled={loginLoading}
+                  >
+                    {loginLoading ? '로그인 중...' : '로그인'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setLoginMode(false); setLoginError(''); }}
+                    className="btn-outline flex-1"
+                  >
+                    취소
+                  </button>
+                </div>
+                <p className="text-center text-sm text-gray-600">
+                  계정이 없으신가요?{' '}
+                  <Link
+                    to={`/register?redirect=/contracts/invitation/${token}`}
+                    className="text-indigo-600 hover:text-indigo-800 font-semibold"
+                  >
+                    회원가입
+                  </Link>
+                </p>
+              </form>
+            </div>
+          )}
+
+          {/* 로그인 완료 표시 */}
+          {isLoggedIn && canSign && (
+            <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+              <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-sm text-green-800 font-medium">의사 계정으로 로그인되었습니다. 서명이 가능합니다.</span>
+            </div>
+          )}
+
           {/* 계약서 본문 */}
           {isDaily && templateData && (
             <div className="border rounded-lg mb-8">
@@ -309,8 +459,8 @@ export default function ContractInvitationPage() {
             </div>
           )}
 
-          {/* 액션 버튼 */}
-          {mode === 'view' && canSign && (
+          {/* 액션 버튼 - 로그인한 경우만 서명/거부 가능 */}
+          {mode === 'view' && canSign && isLoggedIn && (
             <div className="flex gap-3">
               <button
                 onClick={() => setMode('sign')}
@@ -328,7 +478,7 @@ export default function ContractInvitationPage() {
           )}
 
           {/* 서명 모드 */}
-          {mode === 'sign' && (
+          {mode === 'sign' && isLoggedIn && (
             <div className="space-y-4">
               <div ref={containerRef}>
                 <label className="block text-sm font-medium text-gray-700 mb-2">서명을 그려주세요</label>
@@ -374,7 +524,7 @@ export default function ContractInvitationPage() {
           )}
 
           {/* 거부 모드 */}
-          {mode === 'reject' && (
+          {mode === 'reject' && isLoggedIn && (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">거부 사유 *</label>

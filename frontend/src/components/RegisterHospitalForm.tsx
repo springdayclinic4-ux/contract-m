@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../lib/api';
 import type { RegisterHospitalRequest } from '../types';
+import TermsModal, { TermsViewButton } from './TermsModal';
 
 export default function RegisterHospitalForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [step, setStep] = useState<'email' | 'form'>('email');
+  const [termsModal, setTermsModal] = useState<'service' | 'privacy' | 'thirdParty' | 'marketing' | null>(null);
   
   // 이메일 인증
   const [email, setEmail] = useState('');
@@ -292,6 +294,7 @@ export default function RegisterHospitalForm() {
           />
           <span className="text-sm">
             <span className="text-red-600">*</span> 서비스 이용약관에 동의합니다
+            <TermsViewButton onClick={() => setTermsModal('service')} />
           </span>
         </label>
 
@@ -305,6 +308,7 @@ export default function RegisterHospitalForm() {
           />
           <span className="text-sm">
             <span className="text-red-600">*</span> 개인정보 처리방침에 동의합니다
+            <TermsViewButton onClick={() => setTermsModal('privacy')} />
           </span>
         </label>
 
@@ -315,7 +319,10 @@ export default function RegisterHospitalForm() {
             onChange={(e) => setFormData({ ...formData, terms_third_party_agreed: e.target.checked })}
             className="mt-1"
           />
-          <span className="text-sm">개인정보 제3자 제공에 동의합니다 (선택)</span>
+          <span className="text-sm">
+            개인정보 제3자 제공에 동의합니다 (선택)
+            <TermsViewButton onClick={() => setTermsModal('thirdParty')} />
+          </span>
         </label>
 
         <label className="flex items-start gap-2">
@@ -325,9 +332,18 @@ export default function RegisterHospitalForm() {
             onChange={(e) => setFormData({ ...formData, marketing_agreed: e.target.checked })}
             className="mt-1"
           />
-          <span className="text-sm">마케팅 정보 수신에 동의합니다 (선택)</span>
+          <span className="text-sm">
+            마케팅 정보 수신에 동의합니다 (선택)
+            <TermsViewButton onClick={() => setTermsModal('marketing')} />
+          </span>
         </label>
       </div>
+
+      <TermsModal
+        isOpen={!!termsModal}
+        onClose={() => setTermsModal(null)}
+        type={termsModal || 'service'}
+      />
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">

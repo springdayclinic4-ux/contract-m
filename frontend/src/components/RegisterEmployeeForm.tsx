@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { authAPI } from '../lib/api';
 import EmailVerification from './EmailVerification';
 import type { RegisterEmployeeRequest } from '../types';
+import TermsModal, { TermsViewButton } from './TermsModal';
 
 export default function RegisterEmployeeForm() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ export default function RegisterEmployeeForm() {
   const [error, setError] = useState('');
   const [email, setEmail] = useState('');
   const [verified, setVerified] = useState(false);
+  const [termsModal, setTermsModal] = useState<'service' | 'privacy' | 'thirdParty' | 'marketing' | null>(null);
 
   const formatPhone = (value: string) => {
     const nums = value.replace(/[^0-9]/g, '').slice(0, 11);
@@ -174,6 +176,7 @@ export default function RegisterEmployeeForm() {
           />
           <span className="text-sm">
             <span className="text-red-600">*</span> 서비스 이용약관에 동의합니다
+            <TermsViewButton onClick={() => setTermsModal('service')} />
           </span>
         </label>
 
@@ -187,6 +190,7 @@ export default function RegisterEmployeeForm() {
           />
           <span className="text-sm">
             <span className="text-red-600">*</span> 개인정보 처리방침에 동의합니다
+            <TermsViewButton onClick={() => setTermsModal('privacy')} />
           </span>
         </label>
 
@@ -197,9 +201,18 @@ export default function RegisterEmployeeForm() {
             onChange={(e) => setFormData({ ...formData, marketing_agreed: e.target.checked })}
             className="mt-1"
           />
-          <span className="text-sm">마케팅 정보 수신에 동의합니다 (선택)</span>
+          <span className="text-sm">
+            마케팅 정보 수신에 동의합니다 (선택)
+            <TermsViewButton onClick={() => setTermsModal('marketing')} />
+          </span>
         </label>
       </div>
+
+      <TermsModal
+        isOpen={!!termsModal}
+        onClose={() => setTermsModal(null)}
+        type={termsModal || 'service'}
+      />
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
