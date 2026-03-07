@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { authAPI } from '../lib/api';
+import { authAPI, contractAPI } from '../lib/api';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const [pendingContracts, setPendingContracts] = useState<any[]>([]);
+  const [loadingPending, setLoadingPending] = useState(false);
 
   useEffect(() => {
     // 로그인 확인
@@ -28,6 +30,19 @@ export default function DashboardPage() {
       navigate('/login');
     }
   }, [navigate]);
+
+  // 의사 계정이면 대기중 계약서 조회
+  useEffect(() => {
+    if (user?.type === 'doctor') {
+      setLoadingPending(true);
+      contractAPI.getMyPending()
+        .then(({ data }) => {
+          if (data.success) setPendingContracts(data.data);
+        })
+        .catch(() => {})
+        .finally(() => setLoadingPending(false));
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -207,87 +222,55 @@ export default function DashboardPage() {
         {user.type !== 'hospital' && (
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-              <span className="text-3xl">✍️</span> 받은 계약서
+              <span className="text-3xl">✍️</span> 서명 대기 계약서
+              {pendingContracts.length > 0 && (
+                <span className="bg-red-500 text-white text-sm px-3 py-1 rounded-full font-bold">
+                  {pendingContracts.length}건
+                </span>
+              )}
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="card border-l-4 border-orange-500 hover:scale-105 transition-transform duration-300">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-900">
-                      서명 대기 중
-                    </h3>
-                  </div>
-                  <span className="bg-orange-100 text-orange-800 text-xs px-3 py-1 rounded-full font-semibold">대기</span>
-                </div>
-                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                  이메일로 받은 계약서에 전자서명하거나 거부할 수 있습니다.
-                </p>
-                <button
-                  type="button"
-                  className="btn-outline w-full text-orange-600 border-orange-600 hover:bg-orange-50"
-                  onClick={() => alert('📧 이메일로 받은 링크를 통해 계약서에 접근할 수 있습니다.\n\n1. 이메일 확인\n2. 초대 링크 클릭\n3. 계약서 확인 및 서명')}
-                >
-                  안내 보기
-                </button>
-              </div>
 
-              <div className="card border-l-4 border-green-500 hover:scale-105 transition-transform duration-300">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-900">
-                      서명 완료
-                    </h3>
-                  </div>
-                  <span className="bg-green-100 text-green-800 text-xs px-3 py-1 rounded-full font-semibold">완료</span>
-                </div>
-                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                  서명이 완료된 계약서를 확인하고 PDF로 다운로드할 수 있습니다.
-                </p>
-                <button
-                  type="button"
-                  className="btn-outline w-full"
-                  onClick={() => navigate('/contracts?filter=signed')}
-                >
-                  목록 보기 →
-                </button>
+            {loadingPending ? (
+              <div className="card text-center py-8 text-gray-500">불러오는 중...</div>
+            ) : pendingContracts.length === 0 ? (
+              <div className="card text-center py-8">
+                <p className="text-gray-500 text-lg mb-2">대기 중인 계약서가 없습니다</p>
+                <p className="text-gray-400 text-sm">병원에서 계약서를 발송하면 여기에 표시됩니다.</p>
               </div>
-
-              <div className="card border-l-4 border-gray-500 hover:scale-105 transition-transform duration-300">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-10 h-10 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
+            ) : (
+              <div className="space-y-4">
+                {pendingContracts.map((c: any) => (
+                  <div key={c.id} className="card border-l-4 border-orange-500 flex items-center justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="bg-orange-100 text-orange-800 text-xs px-2 py-0.5 rounded-full font-semibold">서명 대기</span>
+                        <span className="text-xs text-gray-500">{c.contractNumber}</span>
+                      </div>
+                      <p className="font-bold text-gray-900 truncate">
+                        {c.hospitalName || '(병원명 미등록)'} - 일용직 근로계약서
+                      </p>
+                      <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
+                        <span>근무일: {c.workDates?.length ? `${c.workDates.length}일` : '-'}</span>
+                        <span>일급: {c.wageGross ? Number(c.wageGross).toLocaleString() + '원' : '-'}</span>
+                        <span>발송: {c.sentAt ? new Date(c.sentAt).toLocaleDateString('ko-KR') : '-'}</span>
+                      </div>
                     </div>
-                    <h3 className="text-lg font-bold text-gray-900">
-                      모든 계약서
-                    </h3>
+                    <button
+                      onClick={() => {
+                        if (c.invitationToken) {
+                          navigate(`/contracts/invitation/${c.invitationToken}`);
+                        } else {
+                          alert('초대 토큰을 찾을 수 없습니다. 이메일의 링크를 이용해주세요.');
+                        }
+                      }}
+                      className="btn-primary whitespace-nowrap px-6"
+                    >
+                      확인 및 서명
+                    </button>
                   </div>
-                  <span className="bg-gray-100 text-gray-800 text-xs px-3 py-1 rounded-full font-semibold">전체</span>
-                </div>
-                <p className="text-gray-600 mb-4 text-sm leading-relaxed">
-                  서명 대기 및 완료된 모든 계약서를 확인할 수 있습니다.
-                </p>
-                <button
-                  type="button"
-                  className="btn-outline w-full"
-                  onClick={() => navigate('/contracts')}
-                >
-                  전체 보기 →
-                </button>
+                ))}
               </div>
-            </div>
+            )}
           </div>
         )}
 

@@ -201,6 +201,66 @@ async function contractRoutes(fastify, options) {
   });
 
   /**
+   * 의사의 대기중 계약서 목록
+   * GET /api/contracts/my-pending
+   */
+  fastify.get('/my-pending', async (request, reply) => {
+    const token = request.headers.authorization?.replace('Bearer ', '');
+
+    if (!token) {
+      return reply.status(401).send({ success: false, message: '인증이 필요합니다.' });
+    }
+
+    const session = await prisma.session.findFirst({ where: { accessToken: token } });
+    if (!session) {
+      return reply.status(401).send({ success: false, message: '유효하지 않은 토큰입니다.' });
+    }
+
+    // 의사 정보 가져오기
+    let doctorEmail = null;
+    if (session.userType === 'doctor') {
+      const doctor = await prisma.doctor.findUnique({ where: { id: session.userId } });
+      if (doctor) doctorEmail = doctor.email;
+    }
+
+    if (!doctorEmail) {
+      return { success: true, data: [] };
+    }
+
+    // 해당 의사 이메일로 발송된 계약서 중 서명 대기중인 것
+    const contracts = await prisma.contract.findMany({
+      where: {
+        doctorEmail: doctorEmail,
+        status: { in: ['sent', 'pending'] }
+      },
+      include: {
+        hospitalContract: {
+          select: {
+            hospitalName: true,
+            directorName: true
+          }
+        },
+        contractInvitations: {
+          select: {
+            invitationToken: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const formatted = contracts.map(({ hospitalContract, contractInvitations, ...c }) => ({
+      ...c,
+      type: 'daily',
+      hospitalName: hospitalContract?.hospitalName,
+      directorName: hospitalContract?.directorName,
+      invitationToken: contractInvitations?.[0]?.invitationToken || null
+    }));
+
+    return { success: true, data: formatted };
+  });
+
+  /**
    * 계약서 목록 조회
    * GET /api/contracts
    */

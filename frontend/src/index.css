@@ -106,6 +106,30 @@
     margin: 10mm;
   }
 
+  /* 계약서 템플릿 인쇄 최적화 */
+  .print-area > div {
+    padding: 15mm !important;
+    font-size: 12px !important;
+    line-height: 1.6 !important;
+  }
+
+  .print-area h1 {
+    font-size: 20px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .print-area .space-y-5 > * + * {
+    margin-top: 8px !important;
+  }
+
+  .print-area .mt-16 {
+    margin-top: 20px !important;
+  }
+
+  .print-area .mb-8 {
+    margin-bottom: 12px !important;
+  }
+
   /* 배경색 강제 출력 */
   * {
     -webkit-print-color-adjust: exact !important;

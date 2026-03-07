@@ -279,10 +279,28 @@ export default function ContractDetailPage() {
                 계약서 번호: {contract.contractNumber}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className={`px-3 py-1 text-sm font-semibold rounded-full ${statusColor}`}>
                 {statusText}
               </span>
+              {contract.hospitalSignatureUrl ? (
+                <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                  병원 서명 완료
+                </span>
+              ) : (
+                <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-500">
+                  병원 미서명
+                </span>
+              )}
+              {contract.signatureImageUrl ? (
+                <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                  의사 서명 완료
+                </span>
+              ) : (
+                <span className="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-500">
+                  의사 미서명
+                </span>
+              )}
               <button onClick={() => navigate('/contracts')} className="btn-outline">
                 목록으로
               </button>
@@ -359,8 +377,19 @@ export default function ContractDetailPage() {
             </button>
           )}
           {contract.hospitalSignatureUrl && (
-            <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-              병원 서명 완료
+            <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+              병원(갑) 서명 완료
+            </span>
+          )}
+          {contract.signatureImageUrl ? (
+            <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold flex items-center gap-1">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+              의사(을) 서명 완료
+            </span>
+          ) : (
+            <span className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
+              의사 서명 대기중
             </span>
           )}
           {contract.status === 'draft' && (

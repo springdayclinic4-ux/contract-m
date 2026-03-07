@@ -134,6 +134,10 @@ export const contractAPI = {
   // 계약서 삭제
   delete: (id: string) =>
     api.delete(`/contracts/${id}`),
+
+  // 의사 대기중 계약서 조회
+  getMyPending: () =>
+    api.get('/contracts/my-pending'),
 };
 
 // 통계 API
