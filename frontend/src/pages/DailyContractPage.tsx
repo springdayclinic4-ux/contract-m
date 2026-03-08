@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { contractAPI, userAPI } from '../lib/api';
-import DailyContractTemplate from '../components/DailyContractTemplate';
+import CompleteDailyContractTemplate from '../components/CompleteDailyContractTemplate';
 
 export default function DailyContractPage() {
   const navigate = useNavigate();
@@ -282,30 +282,10 @@ export default function DailyContractPage() {
     setShowPasteModal(false);
   };
 
-  // 미리보기 데이터 - DailyContractTemplate의 camelCase props로 매핑
+  // 미리보기 데이터
   const previewData = {
-    hospitalName: formData.hospital_name,
-    hospitalAddress: formData.hospital_address,
-    directorName: formData.director_name,
-    doctorName: formData.doctor_name,
-    doctorLicenseNumber: formData.doctor_license_number,
-    doctorAddress: formData.doctor_address,
-    doctorPhone: formData.doctor_phone,
-    doctorRegistrationNumber: formData.doctor_registration_number,
-    workDates: workDates,
-    startTime: formData.start_time,
-    endTime: formData.end_time,
-    breakTime: formData.break_time,
-    wageGross: formData.wage_gross,
-    wageNet: formData.wage_net,
-    wageType: formData.wage_type,
-    bankName: formData.bank_name,
-    accountNumber: formData.account_number,
-    specialConditions: formData.special_conditions,
-    taxMethod: formData.tax_method,
-    includeSecurityPledge: formData.include_security_pledge,
-    includePayStub: formData.include_pay_stub,
-    includeCrimeCheck: formData.include_crime_check,
+    ...formData,
+    workDates,
   };
 
   return (
@@ -814,7 +794,7 @@ export default function DailyContractPage() {
             <span className="bg-indigo-600 text-white text-sm font-bold px-4 py-1.5 rounded-full shadow">미리보기</span>
           </div>
           <div id="print-area" className="print-area bg-white shadow-lg print:shadow-none" style={{ width: '210mm' }}>
-            <DailyContractTemplate data={previewData} />
+            <CompleteDailyContractTemplate data={previewData} />
           </div>
         </div>
       </main>

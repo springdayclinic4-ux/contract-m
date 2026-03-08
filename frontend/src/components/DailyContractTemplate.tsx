@@ -32,7 +32,7 @@ interface DailyContractTemplateProps {
 // 서명 이미지 렌더링 헬퍼
 function SignatureImage({ src, alt }: { src?: string; alt: string }) {
   if (!src) return <span className="text-gray-400 text-sm">(인/서명)</span>;
-  return <img src={src} alt={alt} style={{ maxHeight: '100px', maxWidth: '150px' }} className="object-contain" />;
+  return <img src={src} alt={alt} style={{ maxHeight: '80px', maxWidth: '120px' }} className="object-contain inline-block" />;
 }
 
 export default function DailyContractTemplate({ data }: DailyContractTemplateProps) {
@@ -65,7 +65,7 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
 
   const hasSpecialConditions = data.specialConditions && data.specialConditions.trim() !== '';
 
-  // 세금 계산 (급여명세서용) - 일급 기준
+  // 세금 계산 - 일급 기준
   const dailyWage = parseFloat(data.wageGross || '0') || 0;
   const dailyNet = parseFloat(data.wageNet || '0') || 0;
   const workDayCount = data.workDates?.length || 1;
@@ -78,7 +78,6 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
       incomeTax = Math.floor(gross * 0.03);
       localTax = Math.floor(gross * 0.003);
     } else {
-      // 일용직 근로소득세: 일급별로 계산 후 합산
       for (let i = 0; i < workDayCount; i++) {
         const DAILY_DEDUCTION = 150000;
         if (dailyWage > DAILY_DEDUCTION) {
@@ -99,14 +98,11 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
   const firstDate = data.workDates && data.workDates.length > 0 ? new Date(data.workDates[0]) : new Date();
   const yearMonth = `${firstDate.getFullYear()}-${String(firstDate.getMonth() + 1).padStart(2, '0')}`;
 
-  // 서명 컨테이너 스타일
-  const sigBoxStyle = { width: '150px', height: '100px' };
-
   return (
     <div className="bg-white p-12" style={{ fontFamily: "'Noto Serif KR', serif", fontSize: '14px', lineHeight: '1.8' }}>
       {/* ========== Page 1: 근로계약서 ========== */}
       <h1 className="text-3xl font-bold text-center mb-8">
-        {data.taxMethod === 'business' ? '프리랜서 의사 용역계약서' : '일용직(대진) 의사 근로계약서'}
+        {taxMethod === 'business' ? '프리랜서 의사 용역계약서' : '일용직(대진) 의사 근로계약서'}
       </h1>
 
       <p className="mb-8 text-justify">
@@ -188,13 +184,11 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
             <h4 className="font-bold text-lg mb-4 text-center">"갑" (사업주)</h4>
             <div className="flex"><span className="w-20 text-gray-700 shrink-0">상 호</span><span>: {data.hospitalName || '__________'}</span></div>
             <div className="flex"><span className="w-20 text-gray-700 shrink-0">주 소</span><span>: {data.hospitalAddress || '__________'}</span></div>
-            <div className="flex items-center mt-6 relative">
+            <div className="flex items-center mt-6">
               <span className="w-20 text-gray-700 shrink-0">성 명</span>
               <div className="flex-1 flex justify-between items-center pb-2">
                 <span>: {data.directorName || '__________'}</span>
-                <div className="relative flex items-center justify-center" style={sigBoxStyle}>
-                  <SignatureImage src={data.hospitalSignatureUrl} alt="병원 서명" />
-                </div>
+                <SignatureImage src={data.hospitalSignatureUrl} alt="병원 서명" />
               </div>
             </div>
           </div>
@@ -205,20 +199,18 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
             <div className="flex"><span className="w-24 text-gray-700 shrink-0">연락처</span><span>: {data.doctorPhone || '__________'}</span></div>
             <div className="flex"><span className="w-24 text-gray-700 shrink-0">주민등록번호</span><span>: {data.doctorRegistrationNumber || '__________'}</span></div>
             <div className="flex"><span className="w-24 text-gray-700 shrink-0">면허번호</span><span>: {data.doctorLicenseNumber || '__________'}</span></div>
-            <div className="flex items-center mt-6 relative">
+            <div className="flex items-center mt-6">
               <span className="w-24 text-gray-700 shrink-0">성 명</span>
               <div className="flex-1 flex justify-between items-center pb-2">
                 <span>: {data.doctorName || '__________'}</span>
-                <div className="relative flex items-center justify-center" style={sigBoxStyle}>
-                  <SignatureImage src={data.signatureImageUrl} alt="의사 서명" />
-                </div>
+                <SignatureImage src={data.signatureImageUrl} alt="의사 서명" />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ========== Page 2: 개인정보 동의서 - 의사 서명 ========== */}
+      {/* ========== Page 2: 개인정보 동의서 ========== */}
       <div className="page-break pt-10 mt-16 border-t-2 border-gray-300">
         <h1 className="text-xl font-bold text-center mb-8">
           개인정보 수집 · 이용 · 제공 동의서
@@ -262,12 +254,10 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
             <div className="w-1/2 space-y-2">
               <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: {data.doctorName}</span></div>
               <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">주민등록번호</span><span>: {data.doctorRegistrationNumber || '__________'}</span></div>
-              <div className="flex items-center mt-4 relative">
+              <div className="flex items-center mt-4">
                 <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
                 <div className="flex-1 flex justify-end items-center pb-1">
-                  <div className="relative flex items-center justify-center" style={sigBoxStyle}>
-                    <SignatureImage src={data.signatureImageUrl} alt="의사 서명" />
-                  </div>
+                  <SignatureImage src={data.signatureImageUrl} alt="의사 서명" />
                 </div>
               </div>
             </div>
@@ -275,7 +265,7 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
         </div>
       </div>
 
-      {/* ========== Page 3: 보안 서약서 - 의사 서명 ========== */}
+      {/* ========== Page 3: 보안 서약서 ========== */}
       {data.includeSecurityPledge !== false && (
         <div className="page-break pt-10 mt-16 border-t-2 border-gray-300">
           <h1 className="text-xl font-bold text-center mb-10">
@@ -315,12 +305,10 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
               <div className="w-1/2 space-y-2">
                 <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">소 속</span><span>: 진료부 (대진의)</span></div>
                 <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: {data.doctorName}</span></div>
-                <div className="flex items-center mt-4 relative">
+                <div className="flex items-center mt-4">
                   <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
                   <div className="flex-1 flex justify-end items-center pb-1">
-                    <div className="relative flex items-center justify-center" style={sigBoxStyle}>
-                      <SignatureImage src={data.signatureImageUrl} alt="의사 서명" />
-                    </div>
+                    <SignatureImage src={data.signatureImageUrl} alt="의사 서명" />
                   </div>
                 </div>
               </div>
@@ -329,7 +317,7 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
         </div>
       )}
 
-      {/* ========== Page 4: 급여 명세서 - 병원 서명 ========== */}
+      {/* ========== Page 4: 급여 명세서 ========== */}
       {data.includePayStub !== false && (
         <div className="page-break pt-10 mt-16 border-t-2 border-gray-300">
           <h1 className="text-xl font-bold text-center mb-4">
@@ -427,15 +415,13 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
             <p className="mb-8">{contractDate}</p>
             <div className="flex justify-center items-center gap-4">
               <span className="font-bold text-lg">{data.hospitalName || ''} 대표 {data.directorName || ''}</span>
-              <div className="flex items-center justify-center" style={{ width: '150px', height: '100px' }}>
-                <SignatureImage src={data.hospitalSignatureUrl} alt="병원 서명" />
-              </div>
+              <SignatureImage src={data.hospitalSignatureUrl} alt="병원 서명" />
             </div>
           </div>
         </div>
       )}
 
-      {/* ========== Page 5: 성범죄/아동학대 조회 동의서 - 의사 서명 ========== */}
+      {/* ========== Page 5: 성범죄/아동학대 조회 동의서 ========== */}
       {data.includeCrimeCheck !== false && (
         <div className="page-break pt-10 mt-16 border-t-2 border-gray-300">
           <h1 className="text-xl font-bold text-center mb-8">
@@ -490,12 +476,10 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
             <div className="flex justify-end pr-8">
               <div className="w-1/2 space-y-2">
                 <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: {data.doctorName}</span></div>
-                <div className="flex items-center mt-4 relative">
+                <div className="flex items-center mt-4">
                   <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
                   <div className="flex-1 flex justify-end items-center pb-1">
-                    <div className="relative flex items-center justify-center" style={sigBoxStyle}>
-                      <SignatureImage src={data.signatureImageUrl} alt="의사 서명" />
-                    </div>
+                    <SignatureImage src={data.signatureImageUrl} alt="의사 서명" />
                   </div>
                 </div>
               </div>
