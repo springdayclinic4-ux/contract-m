@@ -127,12 +127,15 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl">
+              <div className="bg-red-50 border-2 border-red-300 text-red-700 px-4 py-4 rounded-xl shadow-sm animate-pulse-once">
                 <div className="flex items-start">
-                  <svg className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-6 h-6 text-red-600 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
-                  <span>{error}</span>
+                  <div>
+                    <p className="font-semibold text-red-800">{error}</p>
+                    <p className="text-sm text-red-600 mt-1">이메일과 비밀번호를 다시 확인해주세요.</p>
+                  </div>
                 </div>
               </div>
             )}
@@ -167,7 +170,7 @@ export default function LoginPage() {
             <p className="text-gray-600">
               계정이 없으신가요?{' '}
               <Link
-                to="/register"
+                to={`/register?type=${userType}`}
                 className="text-indigo-600 hover:text-purple-600 font-semibold transition-colors"
               >
                 회원가입

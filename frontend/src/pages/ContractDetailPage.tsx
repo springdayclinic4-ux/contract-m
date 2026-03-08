@@ -212,7 +212,7 @@ export default function ContractDetailPage() {
   const statusText = getStatusText(contract.status);
   const statusColor = getStatusColor(contract.status);
 
-  const contractData = isDaily ? {
+  const dailyContractData = isDaily ? {
     contractNumber: contract.contractNumber,
     hospitalName: contract.hospitalName || '',
     hospitalAddress: contract.hospitalAddress || '',
@@ -239,31 +239,43 @@ export default function ContractDetailPage() {
     includeSecurityPledge: contract.includeSecurityPledge !== false,
     includePayStub: contract.includePayStub !== false,
     includeCrimeCheck: contract.includeCrimeCheck !== false,
-  } : {
+  } : null;
+
+  const regularContractData = !isDaily ? {
     contractNumber: contract.contractNumber,
     hospitalName: contract.hospitalName || '',
+    directorName: contract.directorName || '',
+    hospitalAddress: contract.hospitalAddress || '',
     employeeName: contract.employeeName,
     employeeBirthDate: contract.employeeBirthDate,
     employeeAddress: contract.employeeAddress,
     employeePhone: contract.employeePhone,
-    employeeBankName: contract.employeeBankName,
-    employeeAccountNumber: contract.employeeAccountNumber,
-    startDate: contract.startDate ? new Date(contract.startDate).toLocaleDateString('ko-KR') : '',
-    endDate: contract.endDate ? new Date(contract.endDate).toLocaleDateString('ko-KR') : '',
-    workLocation: contract.workLocation,
-    workDetails: contract.workDetails,
-    workHoursStart: contract.workHoursStart,
-    workHoursEnd: contract.workHoursEnd,
-    breakHoursStart: contract.breakHoursStart,
-    breakHoursEnd: contract.breakHoursEnd,
-    weeklyHolidays: contract.weeklyHolidays,
-    salary: contract.salary,
-    salaryType: contract.salaryType,
-    paymentDate: contract.paymentDate,
-    paymentMethod: contract.paymentMethod,
+    employeeResidentNumber: contract.employeeResidentNumber,
+    contractType: contract.contractType,
+    workContractStartDate: contract.workContractStartDate ? new Date(contract.workContractStartDate).toLocaleDateString('ko-KR') : '',
+    workContractEndDate: contract.workContractEndDate ? new Date(contract.workContractEndDate).toLocaleDateString('ko-KR') : '',
+    salaryContractStartDate: contract.salaryContractStartDate ? new Date(contract.salaryContractStartDate).toLocaleDateString('ko-KR') : '',
+    salaryContractEndDate: contract.salaryContractEndDate ? new Date(contract.salaryContractEndDate).toLocaleDateString('ko-KR') : '',
+    probationPeriod: contract.probationPeriod,
+    probationSalaryRate: contract.probationSalaryRate,
+    annualSalaryTotal: contract.annualSalaryTotal?.toString(),
+    baseSalary: contract.baseSalary?.toString(),
+    mealAllowance: contract.mealAllowance?.toString(),
+    monthlyBaseSalary: contract.monthlyBaseSalary?.toString(),
+    monthlyMealAllowance: contract.monthlyMealAllowance?.toString(),
+    hourlyWage: contract.regularHourlyWage?.toString(),
+    monthlyWorkHours: contract.monthlyBaseHours?.toString(),
+    workDetails: contract.workContent,
+    workHoursPerDay: contract.workHoursPerDay,
+    workHoursPerWeek: contract.workHoursPerWeek,
+    workStartTime: contract.workStartTime,
+    workEndTime: contract.workEndTime,
+    breakTime: contract.breakTime,
+    weeklyHolidays: contract.workDaysPerWeek,
+    salaryPaymentDay: contract.payDate,
     specialConditions: contract.specialConditions,
     createdAt: contract.createdAt,
-  };
+  } : null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -312,11 +324,11 @@ export default function ContractDetailPage() {
       {/* 계약서 본문 */}
       <div className="max-w-5xl mx-auto py-8 px-4 print:p-0">
         <div id="print-area" className="print-area bg-white rounded-lg shadow-lg mb-6 print:shadow-none print:rounded-none">
-          {isDaily ? (
-            <DailyContractTemplate data={contractData} />
-          ) : (
-            <RegularContractTemplate data={contractData} />
-          )}
+          {isDaily && dailyContractData ? (
+            <DailyContractTemplate data={dailyContractData} />
+          ) : regularContractData ? (
+            <RegularContractTemplate data={regularContractData} />
+          ) : null}
         </div>
 
         {/* 병원 서명 패드 */}
@@ -402,7 +414,7 @@ export default function ContractDetailPage() {
           <button onClick={handlePrint} className="btn-primary px-6">
             인쇄 / PDF 저장
           </button>
-          {!(contract.hospitalSignatureUrl && contract.signatureImageUrl) && (
+          {!contract.hospitalSignatureUrl && !contract.signatureImageUrl && contract.status !== 'signed' && (
             <button
               onClick={handleDelete}
               className="btn-outline text-red-600 border-red-600 hover:bg-red-50 px-6"
@@ -410,9 +422,9 @@ export default function ContractDetailPage() {
               삭제
             </button>
           )}
-          {contract.hospitalSignatureUrl && contract.signatureImageUrl && (
+          {(contract.hospitalSignatureUrl || contract.signatureImageUrl || contract.status === 'signed') && (
             <span className="px-4 py-2 bg-gray-100 text-gray-500 rounded-full text-sm font-semibold">
-              양측 서명 완료 (삭제 불가)
+              서명 진행됨 (삭제 불가)
             </span>
           )}
         </div>

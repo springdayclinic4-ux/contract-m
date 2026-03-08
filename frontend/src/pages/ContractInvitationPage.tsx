@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { contractAPI, authAPI } from '../lib/api';
 import DailyContractTemplate from '../components/DailyContractTemplate';
 
 export default function ContractInvitationPage() {
   const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const fromDashboard = searchParams.get('from') === 'dashboard';
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -30,7 +32,7 @@ export default function ContractInvitationPage() {
   const [loggedInEmail, setLoggedInEmail] = useState('');
   const [emailMismatch, setEmailMismatch] = useState(false);
 
-  // 로그인 상태 체크
+  // 로그인 상태 체크 - 이미 로그인 상태 + 대시보드에서 온 게 아니면 대시보드로 이동
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
     const userStr = localStorage.getItem('user');
@@ -38,12 +40,17 @@ export default function ContractInvitationPage() {
       try {
         const user = JSON.parse(userStr);
         if (user.type === 'doctor') {
+          if (!fromDashboard) {
+            // 이메일 링크로 직접 접근한 경우 → 대시보드에서 계약서 확인 후 서명하도록 유도
+            navigate('/dashboard');
+            return;
+          }
           setIsLoggedIn(true);
           setLoggedInEmail(user.email || '');
         }
       } catch {}
     }
-  }, []);
+  }, [fromDashboard, navigate]);
 
   useEffect(() => {
     if (token) {
@@ -120,15 +127,8 @@ export default function ContractInvitationPage() {
       if (data?.success && payload?.accessToken && payload?.user) {
         localStorage.setItem('accessToken', payload.accessToken);
         localStorage.setItem('user', JSON.stringify(payload.user));
-        setIsLoggedIn(true);
-        setLoggedInEmail(payload.user.email || '');
-        setLoginMode(false);
-        // 이메일 불일치 확인은 contract 로드 후 체크
-        if (contract?.doctorEmail && payload.user.email && payload.user.email !== contract.doctorEmail) {
-          setEmailMismatch(true);
-        } else {
-          setEmailMismatch(false);
-        }
+        // 로그인 성공 → 대시보드로 이동하여 계약서 확인 후 서명하도록 유도
+        navigate('/dashboard');
       } else {
         setLoginError(data?.message || '로그인에 실패했습니다.');
       }
@@ -342,7 +342,8 @@ export default function ContractInvitationPage() {
                 <div>
                   <h3 className="font-bold text-amber-800 mb-1">의사 계정 로그인이 필요합니다</h3>
                   <p className="text-sm text-amber-700 mb-3">
-                    계약서 서명을 위해서는 의사 계정으로 로그인해야 합니다.
+                    계약서 확인 및 서명을 위해서는 의사 계정으로 로그인해야 합니다.
+                    로그인하시면 대시보드에서 계약서를 확인하고 서명할 수 있습니다.
                     계정이 없으시면 먼저 회원가입을 해주세요.
                   </p>
                   <div className="flex gap-2">
@@ -353,7 +354,7 @@ export default function ContractInvitationPage() {
                       의사 로그인
                     </button>
                     <Link
-                      to={`/register?redirect=/contracts/invitation/${token}`}
+                      to="/register?type=doctor"
                       className="bg-white text-amber-700 border border-amber-400 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-amber-50 transition-colors"
                     >
                       회원가입
@@ -415,7 +416,7 @@ export default function ContractInvitationPage() {
                 <p className="text-center text-sm text-gray-600">
                   계정이 없으신가요?{' '}
                   <Link
-                    to={`/register?redirect=/contracts/invitation/${token}`}
+                    to="/register?type=doctor"
                     className="text-indigo-600 hover:text-indigo-800 font-semibold"
                   >
                     회원가입
@@ -514,7 +515,7 @@ export default function ContractInvitationPage() {
             </div>
           )}
 
-          {/* 액션 버튼 - 로그인 + 이메일 일치 시만 서명/거부 가능 */}
+          {/* 액션 버튼 - 대시보드에서 진입 + 로그인 + 이메일 일치 시 서명/거부 가능 */}
           {mode === 'view' && canSign && isLoggedIn && !emailMismatch && (
             <div className="flex gap-3">
               <button

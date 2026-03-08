@@ -26,6 +26,18 @@ async function authRoutes(fastify, options) {
   }, async (request, reply) => {
     const { email } = request.body;
 
+    // 이미 가입된 이메일인지 확인 (병원, 의사, 직원 모두 검색)
+    const existingHospital = await prisma.hospital.findUnique({ where: { email } });
+    const existingDoctor = await prisma.doctor.findUnique({ where: { email } });
+    const existingEmployee = await prisma.employee.findUnique({ where: { email } });
+
+    if (existingHospital || existingDoctor || existingEmployee) {
+      return reply.status(400).send({
+        success: false,
+        message: '이미 가입된 이메일입니다. 로그인해주세요.'
+      });
+    }
+
     // 인증 코드 생성
     const verificationCode = generateRandomString(6);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10분 후

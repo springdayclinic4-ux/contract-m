@@ -5,12 +5,12 @@ import EmailVerification from './EmailVerification';
 import type { RegisterDoctorRequest } from '../types';
 import TermsModal, { TermsViewButton } from './TermsModal';
 
-export default function RegisterDoctorForm({ redirectAfter }: { redirectAfter?: string | null }) {
+export default function RegisterDoctorForm({ redirectAfter, verifiedEmail, onEmailVerified }: { redirectAfter?: string | null; verifiedEmail?: string | null; onEmailVerified?: (email: string) => void }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [email, setEmail] = useState('');
-  const [verified, setVerified] = useState(false);
+  const [email, setEmail] = useState(verifiedEmail || '');
+  const [verified, setVerified] = useState(!!verifiedEmail);
   const [termsModal, setTermsModal] = useState<'service' | 'privacy' | 'thirdParty' | 'marketing' | null>(null);
 
   const formatPhone = (value: string) => {
@@ -27,7 +27,7 @@ export default function RegisterDoctorForm({ redirectAfter }: { redirectAfter?: 
   };
 
   const [formData, setFormData] = useState<RegisterDoctorRequest>({
-    email: '',
+    email: verifiedEmail || '',
     password: '',
     name: '',
     license_number: '',
@@ -40,10 +40,11 @@ export default function RegisterDoctorForm({ redirectAfter }: { redirectAfter?: 
     marketing_agreed: false,
   });
 
-  const handleEmailVerified = (verifiedEmail: string) => {
-    setEmail(verifiedEmail);
+  const handleEmailVerified = (vEmail: string) => {
+    setEmail(vEmail);
     setVerified(true);
-    setFormData({ ...formData, email: verifiedEmail });
+    setFormData({ ...formData, email: vEmail });
+    onEmailVerified?.(vEmail);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

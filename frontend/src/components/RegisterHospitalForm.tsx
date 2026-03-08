@@ -4,18 +4,18 @@ import { authAPI } from '../lib/api';
 import type { RegisterHospitalRequest } from '../types';
 import TermsModal, { TermsViewButton } from './TermsModal';
 
-export default function RegisterHospitalForm() {
+export default function RegisterHospitalForm({ verifiedEmail, onEmailVerified }: { verifiedEmail?: string | null; onEmailVerified?: (email: string) => void }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [step, setStep] = useState<'email' | 'form'>('email');
+  const [step, setStep] = useState<'email' | 'form'>(verifiedEmail ? 'form' : 'email');
   const [termsModal, setTermsModal] = useState<'service' | 'privacy' | 'thirdParty' | 'marketing' | null>(null);
-  
+
   // 이메일 인증
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(verifiedEmail || '');
   const [verificationCode, setVerificationCode] = useState('');
   const [codeSent, setCodeSent] = useState(false);
-  const [verified, setVerified] = useState(false);
+  const [verified, setVerified] = useState(!!verifiedEmail);
 
   // 회원가입 폼
   // 자동 하이픈 포맷 함수
@@ -40,7 +40,7 @@ export default function RegisterHospitalForm() {
   };
 
   const [formData, setFormData] = useState<RegisterHospitalRequest>({
-    email: '',
+    email: verifiedEmail || '',
     password: '',
     business_registration_number: '',
     hospital_name: '',
@@ -77,6 +77,7 @@ export default function RegisterHospitalForm() {
       setVerified(true);
       setFormData({ ...formData, email });
       setStep('form');
+      onEmailVerified?.(email);
     } catch (err: any) {
       setError(err.response?.data?.message || '인증 코드가 올바르지 않습니다.');
     } finally {

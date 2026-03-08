@@ -118,6 +118,7 @@ async function contractRoutes(fastify, options) {
       employee_birth_date,
       employee_address,
       employee_phone,
+      employee_resident_number,
       contract_type,
       work_contract_start_date,
       work_contract_end_date,
@@ -162,6 +163,7 @@ async function contractRoutes(fastify, options) {
         employeeBirthDate: employee_birth_date ? new Date(employee_birth_date) : null,
         employeeAddress: employee_address,
         employeePhone: employee_phone || null,
+        employeeRegistrationNumber: employee_resident_number || null,
         contractType: contract_type || null,
         workContractStartDate: work_contract_start_date ? new Date(work_contract_start_date) : null,
         workContractEndDate: work_contract_end_date ? new Date(work_contract_end_date) : null,
@@ -178,15 +180,15 @@ async function contractRoutes(fastify, options) {
         monthlyOvertimeAllowance: monthly_overtime_allowance ? parseFloat(monthly_overtime_allowance) : null,
         monthlyTotal: monthly_total ? parseFloat(monthly_total) : null,
         regularHourlyWage: regular_hourly_wage ? parseFloat(regular_hourly_wage) : null,
-        monthlyBaseHours: monthly_base_hours || null,
+        monthlyBaseHours: monthly_base_hours ? parseInt(monthly_base_hours) : null,
         monthlyOvertimeHours: monthly_overtime_hours || null,
-        payDate: pay_date || null,
+        payDate: pay_date ? parseInt(pay_date) : null,
         workContent: work_content || null,
         workLocation: work_location || null,
         workStartTime: work_start_time || null,
         workEndTime: work_end_time || null,
         breakTime: break_time || null,
-        workDaysPerWeek: work_days_per_week || null,
+        workDaysPerWeek: work_days_per_week ? parseInt(work_days_per_week) : null,
         includeSecurityPledge: include_security_pledge !== false,
         includePrivacyConsent: include_privacy_consent !== false,
         status: 'draft'
@@ -418,7 +420,17 @@ async function contractRoutes(fastify, options) {
 
     // 근로계약서 확인
     let laborContract = await prisma.laborContract.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        hospitalContract: {
+          select: {
+            hospitalName: true,
+            directorName: true,
+            hospitalAddress: true,
+            hospitalPhone: true
+          }
+        }
+      }
     });
 
     if (laborContract) {
@@ -430,9 +442,17 @@ async function contractRoutes(fastify, options) {
         });
       }
 
+      const { hospitalContract: hospData, ...laborData } = laborContract;
       return {
         success: true,
-        data: { ...laborContract, type: 'regular' }
+        data: {
+          ...laborData,
+          type: 'regular',
+          hospitalName: hospData?.hospitalName,
+          directorName: hospData?.directorName,
+          hospitalAddress: hospData?.hospitalAddress,
+          hospitalPhone: hospData?.hospitalPhone
+        }
       };
     }
 
@@ -766,6 +786,15 @@ async function contractRoutes(fastify, options) {
         });
       }
 
+      // 계약서에 기재된 이름과 가입된 이름 일치 확인
+      if (contractInvitation.contract.doctorName && doctor.name &&
+          contractInvitation.contract.doctorName.trim() !== doctor.name.trim()) {
+        return reply.status(400).send({
+          success: false,
+          message: `계약서에 기재된 이름(${contractInvitation.contract.doctorName})과 회원가입 시 등록된 이름(${doctor.name})이 일치하지 않습니다. 병원에 문의하거나 설정에서 이름을 확인해주세요.`
+        });
+      }
+
       // 초대 만료 확인
       if (contractInvitation.expiresAt < new Date()) {
         return reply.status(400).send({
@@ -972,11 +1001,19 @@ async function contractRoutes(fastify, options) {
         });
       }
 
-      // 병원과 의사 모두 서명 완료된 계약서는 삭제 불가
-      if (contract.hospitalSignatureUrl && contract.signatureImageUrl) {
+      // 서명이 하나라도 있는 계약서는 삭제 불가
+      if (contract.hospitalSignatureUrl || contract.signatureImageUrl) {
         return reply.status(400).send({
           success: false,
-          message: '양측 서명이 완료된 계약서는 삭제할 수 없습니다.'
+          message: '서명이 진행된 계약서는 삭제할 수 없습니다.'
+        });
+      }
+
+      // 발송 후 서명 대기중인 계약서도 삭제 불가
+      if (contract.status === 'signed') {
+        return reply.status(400).send({
+          success: false,
+          message: '서명 완료된 계약서는 삭제할 수 없습니다.'
         });
       }
 

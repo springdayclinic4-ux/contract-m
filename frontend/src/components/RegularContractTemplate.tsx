@@ -103,7 +103,7 @@ export default function RegularContractTemplate({ data }: RegularContractTemplat
               <td className="border-r-2 border-gray-800 px-3 py-2 font-semibold">성명</td>
               <td className="border-r-2 border-gray-800 px-3 py-2">{data.employeeName || '[근로자명]'}</td>
               <td className="border-r-2 border-gray-800 px-3 py-2 font-semibold">생년월일</td>
-              <td className="px-3 py-2">{data.employeeBirthDate || '[생년월일]'}</td>
+              <td className="px-3 py-2">{data.employeeBirthDate ? (data.employeeBirthDate.includes('T') ? data.employeeBirthDate.split('T')[0] : data.employeeBirthDate) : '[생년월일]'}</td>
             </tr>
           </tbody>
         </table>

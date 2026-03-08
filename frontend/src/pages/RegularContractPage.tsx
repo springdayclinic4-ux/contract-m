@@ -140,13 +140,40 @@ export default function RegularContractPage() {
 
   const handleSubmit = async () => {
     setError('');
+
+    // 연봉 기간 검증
+    if (formData.salary_contract_start_date && formData.salary_contract_end_date) {
+      if (formData.salary_contract_end_date < formData.salary_contract_start_date) {
+        setError('연봉 종료일은 시작일보다 이후여야 합니다.');
+        return;
+      }
+    }
+
+    // 근로 기간 검증
+    if (formData.work_contract_start_date && formData.work_contract_end_date) {
+      if (formData.work_contract_end_date < formData.work_contract_start_date) {
+        setError('근로 종료일은 시작일보다 이후여야 합니다.');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
       const payload = {
         ...formData,
+        // 백엔드 필드명 매핑
+        work_content: formData.work_details,
+        work_location: formData.hospital_address,
+        pay_date: formData.salary_payment_day,
+        monthly_total: formData.monthly_base_salary && formData.monthly_meal_allowance
+          ? (Number(formData.monthly_base_salary) + Number(formData.monthly_meal_allowance)).toString()
+          : '',
+        regular_hourly_wage: formData.hourly_wage,
+        monthly_base_hours: formData.monthly_work_hours,
+        employee_resident_number: formData.employee_resident_number,
       };
-      
+
       const { data } = await contractAPI.createRegular(payload);
       
       if (data.success) {

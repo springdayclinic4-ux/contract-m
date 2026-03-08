@@ -8,9 +8,12 @@ import type { UserType } from '../types';
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
   const redirect = searchParams.get('redirect');
-  // invitation 링크에서 왔으면 의사 타입을 기본으로
-  const defaultType = redirect?.includes('/invitation/') ? 'doctor' : 'hospital';
+  const typeParam = searchParams.get('type');
+  // invitation 링크에서 왔으면 의사 타입을 기본으로, type 파라미터가 있으면 그걸 사용
+  const defaultType = redirect?.includes('/invitation/') ? 'doctor' : (typeParam || 'hospital');
   const [userType, setUserType] = useState<UserType>(defaultType as UserType);
+  // 이메일 인증 상태를 상위에서 관리 (유형 변경 시에도 재인증 불필요)
+  const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen gradient-bg py-12 px-4">
@@ -29,7 +32,8 @@ export default function RegisterPage() {
             <p className="text-gray-700 font-medium"><strong className="text-indigo-600">THERANOVA</strong> 계약서 관리 시스템에 가입하세요</p>
           </div>
 
-          {/* 사용자 유형 선택 */}
+          {/* 사용자 유형 선택 - 인증 완료 전에만 표시 */}
+          {!verifiedEmail && (
           <div className="mb-8">
             <label className="label text-center text-gray-700">가입 유형 선택</label>
             <div className="grid grid-cols-3 gap-3">
@@ -74,12 +78,23 @@ export default function RegisterPage() {
               </button>
             </div>
           </div>
+          )}
+
+          {/* 인증 완료 후 유형 표시 */}
+          {verifiedEmail && (
+            <div className="mb-6 p-3 bg-indigo-50 border border-indigo-200 rounded-lg flex items-center justify-between">
+              <span className="text-sm text-indigo-800 font-medium">
+                {userType === 'hospital' ? '🏥 병원' : userType === 'doctor' ? '👨‍⚕️ 의사' : '👤 일반직원'} 회원가입
+              </span>
+              <span className="text-sm text-indigo-600">{verifiedEmail}</span>
+            </div>
+          )}
 
           {/* 회원가입 폼 */}
           <div>
-            {userType === 'hospital' && <RegisterHospitalForm />}
-            {userType === 'doctor' && <RegisterDoctorForm redirectAfter={redirect} />}
-            {userType === 'employee' && <RegisterEmployeeForm />}
+            {userType === 'hospital' && <RegisterHospitalForm verifiedEmail={verifiedEmail} onEmailVerified={setVerifiedEmail} />}
+            {userType === 'doctor' && <RegisterDoctorForm redirectAfter={redirect} verifiedEmail={verifiedEmail} onEmailVerified={setVerifiedEmail} />}
+            {userType === 'employee' && <RegisterEmployeeForm verifiedEmail={verifiedEmail} onEmailVerified={setVerifiedEmail} />}
           </div>
 
           {/* 로그인 링크 */}
