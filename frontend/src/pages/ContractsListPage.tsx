@@ -254,97 +254,27 @@ export default function ContractsListPage() {
           )}
         </div>
 
-        {/* 일반 근로계약서 */}
-        <div className="card">
+        {/* 일반 근로계약서 - 준비중 */}
+        <div className="card opacity-60">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-500 rounded-xl flex items-center justify-center shadow-lg">
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">일반 근로계약서</h2>
-                <p className="text-sm text-gray-600">{regularContracts.length}개의 계약서</p>
+                <h2 className="text-xl font-bold text-gray-500">일반 근로계약서</h2>
+                <p className="text-sm text-gray-400">준비중</p>
               </div>
             </div>
-            {isHospital && (
-              <button
-                onClick={() => navigate('/contracts/regular')}
-                className="btn-primary"
-              >
-                + 새로 작성
-              </button>
-            )}
+            <span className="bg-gray-100 text-gray-500 text-xs px-3 py-1 rounded-full font-semibold">준비중</span>
           </div>
-
-          {regularContracts.length === 0 ? (
-            <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
-              <div className="text-6xl mb-4">📄</div>
-              <p className="text-gray-600 font-medium">작성된 일반 근로계약서가 없습니다.</p>
-              {isHospital && (
-                <button
-                  onClick={() => navigate('/contracts/regular')}
-                  className="btn-outline mt-4"
-                >
-                  첫 계약서 작성하기
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {regularContracts.map((contract) => (
-                <div
-                  key={contract.id}
-                  className="bg-gradient-to-r from-white to-gray-50 rounded-xl border-2 border-gray-200 hover:border-emerald-300 hover:shadow-lg transition-all duration-300 p-5"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-start gap-4 flex-1">
-                      <div className="text-3xl">{getStatusIcon(contract.status)}</div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-lg font-bold text-gray-900">{contract.contractNumber}</h3>
-                          <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(contract.status)}`}>
-                            {getStatusText(contract.status)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            {contract.employeeName || '직원 정보 없음'}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            {new Date(contract.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => navigate(`/contracts/${contract.id}`)}
-                        className="btn-outline text-emerald-600 border-emerald-600 hover:bg-emerald-50"
-                      >
-                        상세보기
-                      </button>
-                      {isHospital && contract.status === 'draft' && (
-                        <button
-                          onClick={() => handleDelete(contract.id)}
-                          className="btn-secondary text-red-600 hover:bg-red-50 border-red-300"
-                        >
-                          삭제
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="text-center py-8 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-gray-300">
+            <div className="text-5xl mb-3">🔒</div>
+            <p className="text-gray-500 font-medium">일반 근로계약서 기능은 현재 준비중입니다.</p>
+            <p className="text-gray-400 text-sm mt-1">빠른 시일 내에 제공될 예정입니다.</p>
+          </div>
         </div>
       </div>
     </div>

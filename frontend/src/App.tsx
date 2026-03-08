@@ -3,7 +3,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import DailyContractPage from './pages/DailyContractPage';
-import RegularContractPage from './pages/RegularContractPage';
+import ComingSoonPage from './pages/ComingSoonPage';
 import ContractsListPage from './pages/ContractsListPage';
 import ContractDetailPage from './pages/ContractDetailPage';
 import ContractInvitationPage from './pages/ContractInvitationPage';
@@ -21,7 +21,7 @@ function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/contracts/daily" element={<DailyContractPage />} />
-        <Route path="/contracts/regular" element={<RegularContractPage />} />
+        <Route path="/contracts/regular" element={<ComingSoonPage />} />
         <Route path="/contracts/invitation/:token" element={<ContractInvitationPage />} />
         <Route path="/contracts/:id" element={<ContractDetailPage />} />
         <Route path="/contracts" element={<ContractsListPage />} />
