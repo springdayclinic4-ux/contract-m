@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { contractAPI, userAPI } from '../lib/api';
-import CompleteDailyContractTemplate from '../components/CompleteDailyContractTemplate';
+import DailyContractTemplate from '../components/DailyContractTemplate';
 
 export default function DailyContractPage() {
   const navigate = useNavigate();
@@ -237,10 +237,75 @@ export default function DailyContractPage() {
     }
   };
 
-  // 미리보기 데이터
+  // 의사 정보 붙여넣기 파싱
+  const [showPasteModal, setShowPasteModal] = useState(false);
+  const [pasteText, setPasteText] = useState('');
+
+  const handleParsePaste = () => {
+    const text = pasteText.trim();
+    if (!text) return;
+
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const parsed: Record<string, string> = {};
+
+    for (const line of lines) {
+      // "키: 값" 또는 "키 : 값" 또는 "키\t값" 형태 파싱
+      const match = line.match(/^(.+?)\s*[:：\t]\s*(.+)$/);
+      if (match) {
+        const key = match[1].trim();
+        const value = match[2].trim();
+
+        if (/성명|이름|name/i.test(key) && !/예금주/.test(key)) parsed.name = value;
+        else if (/이메일|email|메일/i.test(key)) parsed.email = value;
+        else if (/주민등록번호|주민번호|resident/i.test(key)) parsed.residentNumber = value;
+        else if (/연락처|전화번호|핸드폰|휴대폰|phone|tel/i.test(key)) parsed.phone = value;
+        else if (/면허번호|license/i.test(key)) parsed.license = value;
+        else if (/주소|address/i.test(key)) parsed.address = value;
+        else if (/은행|bank/i.test(key)) parsed.bank = value;
+        else if (/계좌|account/i.test(key)) parsed.account = value;
+      }
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      ...(parsed.name && { doctor_name: parsed.name }),
+      ...(parsed.email && { doctor_email: parsed.email }),
+      ...(parsed.residentNumber && { doctor_registration_number: parsed.residentNumber }),
+      ...(parsed.phone && { doctor_phone: parsed.phone }),
+      ...(parsed.license && { doctor_license_number: parsed.license }),
+      ...(parsed.address && { doctor_address: parsed.address }),
+      ...(parsed.bank && { bank_name: parsed.bank }),
+      ...(parsed.account && { account_number: parsed.account }),
+    }));
+
+    setPasteText('');
+    setShowPasteModal(false);
+  };
+
+  // 미리보기 데이터 - DailyContractTemplate의 camelCase props로 매핑
   const previewData = {
-    ...formData,
-    workDates,
+    hospitalName: formData.hospital_name,
+    hospitalAddress: formData.hospital_address,
+    directorName: formData.director_name,
+    doctorName: formData.doctor_name,
+    doctorLicenseNumber: formData.doctor_license_number,
+    doctorAddress: formData.doctor_address,
+    doctorPhone: formData.doctor_phone,
+    doctorRegistrationNumber: formData.doctor_registration_number,
+    workDates: workDates,
+    startTime: formData.start_time,
+    endTime: formData.end_time,
+    breakTime: formData.break_time,
+    wageGross: formData.wage_gross,
+    wageNet: formData.wage_net,
+    wageType: formData.wage_type,
+    bankName: formData.bank_name,
+    accountNumber: formData.account_number,
+    specialConditions: formData.special_conditions,
+    taxMethod: formData.tax_method,
+    includeSecurityPledge: formData.include_security_pledge,
+    includePayStub: formData.include_pay_stub,
+    includeCrimeCheck: formData.include_crime_check,
   };
 
   return (
@@ -331,12 +396,67 @@ export default function DailyContractPage() {
 
           {/* 의사 정보 */}
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h2 className="text-lg font-semibold mb-4 border-b pb-2 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              의사(을) 정보
+            <h2 className="text-lg font-semibold mb-4 border-b pb-2 flex items-center justify-between">
+              <span className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                의사(을) 정보
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowPasteModal(true)}
+                className="text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-200 transition font-medium"
+              >
+                붙여넣기로 입력
+              </button>
             </h2>
+
+            {/* 붙여넣기 모달 */}
+            {showPasteModal && (
+              <div className="mb-4 bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-bold text-indigo-900">의사 정보 붙여넣기</h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowPasteModal(false)}
+                    className="text-gray-400 hover:text-gray-600 text-lg leading-none"
+                  >
+                    &times;
+                  </button>
+                </div>
+                <p className="text-xs text-indigo-700 mb-2">아래 양식을 복사하여 정보를 채운 후 붙여넣으세요.</p>
+                <div className="bg-white border border-indigo-200 rounded p-2 mb-2 text-xs text-gray-600 font-mono select-all cursor-pointer" onClick={(e) => {
+                  const range = document.createRange();
+                  range.selectNodeContents(e.currentTarget);
+                  window.getSelection()?.removeAllRanges();
+                  window.getSelection()?.addRange(range);
+                }}>
+                  성명: <br />
+                  이메일: <br />
+                  주민등록번호: <br />
+                  연락처: <br />
+                  면허번호: <br />
+                  주소: <br />
+                  은행: <br />
+                  계좌번호:
+                </div>
+                <textarea
+                  value={pasteText}
+                  onChange={(e) => setPasteText(e.target.value)}
+                  placeholder={"성명: 홍길동\n이메일: hong@email.com\n주민등록번호: 800101-1234567\n연락처: 010-1234-5678\n면허번호: 제 12345 호\n주소: 서울시 강남구...\n은행: 국민은행\n계좌번호: 123-456-789"}
+                  rows={8}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={handleParsePaste}
+                  className="mt-2 w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition font-semibold text-sm"
+                >
+                  적용하기
+                </button>
+              </div>
+            )}
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">성명 *</label>
@@ -689,9 +809,12 @@ export default function DailyContractPage() {
         </div>
 
         {/* 오른쪽: 미리보기 */}
-        <div className="w-full md:w-2/3 bg-gray-200 p-4 md:p-8 flex justify-center items-start custom-scrollbar print:bg-white print:p-0" style={{ maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
+        <div className="w-full md:w-2/3 bg-gray-200 p-4 md:p-8 flex flex-col items-center custom-scrollbar print:bg-white print:p-0" style={{ maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
+          <div className="w-full flex justify-center mb-3 print:hidden">
+            <span className="bg-indigo-600 text-white text-sm font-bold px-4 py-1.5 rounded-full shadow">미리보기</span>
+          </div>
           <div id="print-area" className="print-area bg-white shadow-lg print:shadow-none" style={{ width: '210mm' }}>
-            <CompleteDailyContractTemplate data={previewData} />
+            <DailyContractTemplate data={previewData} />
           </div>
         </div>
       </main>
