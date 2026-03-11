@@ -23,6 +23,7 @@ interface DailyContractTemplateProps {
     signatureImageUrl?: string;
     hospitalSignatureUrl?: string;
     taxMethod?: string; // 'business' | 'daily'
+    paymentDate?: string;
     includeSecurityPledge?: boolean;
     includePayStub?: boolean;
     includeCrimeCheck?: boolean;
@@ -45,6 +46,18 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
   const contractDate = data.createdAt
     ? new Date(data.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })
     : today;
+
+  // 급여 지급일 표시
+  const paymentDateLabels: Record<string, string> = {
+    same_day: '근무 종료 후 당일 지급',
+    next_day: '근무 익일 지급',
+    weekly: '매주 지급',
+    monthly_10: '매월 10일 지급',
+    monthly_15: '매월 15일 지급',
+    monthly_25: '매월 25일 지급',
+    monthly_last: '매월 말일 지급',
+  };
+  const paymentDateText = paymentDateLabels[data.paymentDate || 'same_day'] || '근무 종료 후 당일 지급';
 
   // 근무일 포맷팅
   const formattedWorkDates = data.workDates && data.workDates.length > 0
@@ -146,7 +159,7 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
               일급: <span className="font-bold mx-2">금 {displayWage} 원</span>
               ({displayWageType})
             </li>
-            <li>지급방법: 근무 종료 후 당일 지급에 "을"의 계좌로 입금한다.</li>
+            <li>지급방법: {paymentDateText}에 "을"의 계좌로 입금한다.</li>
             <li>
               계좌정보: {data.bankName || '__________'} {data.accountNumber || '__________'}
               (예금주: {data.doctorName || '__________'})
@@ -182,10 +195,10 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
         <div className="grid grid-cols-2 gap-12">
           <div className="space-y-3">
             <h4 className="font-bold text-lg mb-4 text-center">"갑" (사업주)</h4>
-            <div className="flex"><span className="w-20 text-gray-700 shrink-0">상 호</span><span>: {data.hospitalName || '__________'}</span></div>
-            <div className="flex"><span className="w-20 text-gray-700 shrink-0">주 소</span><span>: {data.hospitalAddress || '__________'}</span></div>
+            <div className="flex"><span className="w-20 text-gray-700 shrink-0 whitespace-nowrap">상 호</span><span>: {data.hospitalName || '__________'}</span></div>
+            <div className="flex"><span className="w-20 text-gray-700 shrink-0 whitespace-nowrap">주 소</span><span>: {data.hospitalAddress || '__________'}</span></div>
             <div className="flex items-center mt-6">
-              <span className="w-20 text-gray-700 shrink-0">성 명</span>
+              <span className="w-20 text-gray-700 shrink-0 whitespace-nowrap">성 명</span>
               <div className="flex-1 flex justify-between items-center pb-2">
                 <span>: {data.directorName || '__________'}</span>
                 <SignatureImage src={data.hospitalSignatureUrl} alt="병원 서명" />
@@ -195,12 +208,12 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
 
           <div className="space-y-3">
             <h4 className="font-bold text-lg mb-4 text-center">"을" (근로자)</h4>
-            <div className="flex"><span className="w-24 text-gray-700 shrink-0">주 소</span><span>: {data.doctorAddress || '__________'}</span></div>
-            <div className="flex"><span className="w-24 text-gray-700 shrink-0">연락처</span><span>: {data.doctorPhone || '__________'}</span></div>
-            <div className="flex"><span className="w-24 text-gray-700 shrink-0">주민등록번호</span><span>: {data.doctorRegistrationNumber || '__________'}</span></div>
-            <div className="flex"><span className="w-24 text-gray-700 shrink-0">면허번호</span><span>: {data.doctorLicenseNumber || '__________'}</span></div>
+            <div className="flex"><span className="w-24 text-gray-700 shrink-0 whitespace-nowrap">주 소</span><span>: {data.doctorAddress || '__________'}</span></div>
+            <div className="flex"><span className="w-24 text-gray-700 shrink-0 whitespace-nowrap">연락처</span><span>: {data.doctorPhone || '__________'}</span></div>
+            <div className="flex"><span className="w-24 text-gray-700 shrink-0 whitespace-nowrap">주민등록번호</span><span>: {data.doctorRegistrationNumber || '__________'}</span></div>
+            <div className="flex"><span className="w-24 text-gray-700 shrink-0 whitespace-nowrap">면허번호</span><span>: {data.doctorLicenseNumber || '__________'}</span></div>
             <div className="flex items-center mt-6">
-              <span className="w-24 text-gray-700 shrink-0">성 명</span>
+              <span className="w-24 text-gray-700 shrink-0 whitespace-nowrap">성 명</span>
               <div className="flex-1 flex justify-between items-center pb-2">
                 <span>: {data.doctorName || '__________'}</span>
                 <SignatureImage src={data.signatureImageUrl} alt="의사 서명" />
@@ -252,10 +265,10 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
           <p className="text-center mb-8 text-base">{contractDate}</p>
           <div className="flex justify-end pr-8">
             <div className="w-1/2 space-y-2">
-              <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: {data.doctorName}</span></div>
-              <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">주민등록번호</span><span>: {data.doctorRegistrationNumber || '__________'}</span></div>
+              <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold whitespace-nowrap">성 명</span><span>: {data.doctorName}</span></div>
+              <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold whitespace-nowrap">주민등록번호</span><span>: {data.doctorRegistrationNumber || '__________'}</span></div>
               <div className="flex items-center mt-4">
-                <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
+                <span className="w-24 text-gray-600 shrink-0 font-bold whitespace-nowrap">서 명</span>
                 <div className="flex-1 flex justify-end items-center pb-1">
                   <SignatureImage src={data.signatureImageUrl} alt="의사 서명" />
                 </div>
@@ -303,10 +316,10 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
             <p className="text-center mb-8 text-base">{contractDate}</p>
             <div className="flex justify-end pr-8">
               <div className="w-1/2 space-y-2">
-                <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">소 속</span><span>: 진료부 (대진의)</span></div>
-                <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: {data.doctorName}</span></div>
+                <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold whitespace-nowrap">소 속</span><span>: 진료부 (대진의)</span></div>
+                <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold whitespace-nowrap">성 명</span><span>: {data.doctorName}</span></div>
                 <div className="flex items-center mt-4">
-                  <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
+                  <span className="w-24 text-gray-600 shrink-0 font-bold whitespace-nowrap">서 명</span>
                   <div className="flex-1 flex justify-end items-center pb-1">
                     <SignatureImage src={data.signatureImageUrl} alt="의사 서명" />
                   </div>
@@ -475,9 +488,9 @@ export default function DailyContractTemplate({ data }: DailyContractTemplatePro
             <p className="text-center mb-8 text-base">{contractDate}</p>
             <div className="flex justify-end pr-8">
               <div className="w-1/2 space-y-2">
-                <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold">성 명</span><span>: {data.doctorName}</span></div>
+                <div className="flex"><span className="w-24 text-gray-600 shrink-0 font-bold whitespace-nowrap">성 명</span><span>: {data.doctorName}</span></div>
                 <div className="flex items-center mt-4">
-                  <span className="w-24 text-gray-600 shrink-0 font-bold">서 명</span>
+                  <span className="w-24 text-gray-600 shrink-0 font-bold whitespace-nowrap">서 명</span>
                   <div className="flex-1 flex justify-end items-center pb-1">
                     <SignatureImage src={data.signatureImageUrl} alt="의사 서명" />
                   </div>

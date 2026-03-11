@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import RegisterHospitalForm from '../components/RegisterHospitalForm';
 import RegisterDoctorForm from '../components/RegisterDoctorForm';
-import RegisterEmployeeForm from '../components/RegisterEmployeeForm';
 import type { UserType } from '../types';
 
 export default function RegisterPage() {
@@ -94,7 +93,17 @@ export default function RegisterPage() {
           <div>
             {userType === 'hospital' && <RegisterHospitalForm verifiedEmail={verifiedEmail} onEmailVerified={setVerifiedEmail} />}
             {userType === 'doctor' && <RegisterDoctorForm redirectAfter={redirect} verifiedEmail={verifiedEmail} onEmailVerified={setVerifiedEmail} />}
-            {userType === 'employee' && <RegisterEmployeeForm verifiedEmail={verifiedEmail} onEmailVerified={setVerifiedEmail} />}
+            {userType === 'employee' && (
+              <div className="text-center py-16">
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-6">
+                  <svg className="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-700 mb-2">준비중입니다</h2>
+                <p className="text-gray-500">일반직원 회원가입 기능은 현재 준비중입니다.</p>
+              </div>
+            )}
           </div>
 
           {/* 로그인 링크 */}

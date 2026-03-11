@@ -1,6 +1,8 @@
 import prisma from '../config/database.js';
 import { generateUUID } from '../utils/crypto.js';
 
+// 민감정보 필터링 제거 - 의사가 직접 삭제 버튼으로만 삭제
+
 async function contractRoutes(fastify, options) {
   /**
    * 일용직 계약서 생성
@@ -48,7 +50,8 @@ async function contractRoutes(fastify, options) {
       include_security_pledge,
       include_pay_stub,
       include_crime_check,
-      tax_method
+      tax_method,
+      payment_date
     } = request.body;
 
     // 계약서 번호 생성 (YYYYMMDD-UUID)
@@ -61,7 +64,7 @@ async function contractRoutes(fastify, options) {
         creatorType: session.userType,
         creatorId: session.userId,
         hospitalId: session.userType === 'hospital' ? session.userId : null,
-        doctorEmail: doctor_email,
+        doctorEmail: doctor_email?.toLowerCase().trim(),
         doctorName: doctor_name,
         doctorRegistrationNumber: doctor_registration_number || null,
         doctorLicenseNumber: doctor_license_number,
@@ -77,6 +80,7 @@ async function contractRoutes(fastify, options) {
         wageNet: wage_net ? parseFloat(wage_net) : null,
         wageType: wage_type || null,
         taxMethod: tax_method || 'business',
+        paymentDate: payment_date || 'same_day',
         specialConditions: special_conditions || null,
         includeSecurityPledge: include_security_pledge !== false,
         includePayStub: include_pay_stub !== false,
@@ -88,7 +92,7 @@ async function contractRoutes(fastify, options) {
     return reply.status(201).send({
       success: true,
       message: '일용직 계약서가 생성되었습니다.',
-      data: contract
+      data: (contract)
     });
   });
 
@@ -204,7 +208,7 @@ async function contractRoutes(fastify, options) {
     return reply.status(201).send({
       success: true,
       message: '일반 근로계약서가 생성되었습니다.',
-      data: laborContract
+      data: (laborContract)
     });
   });
 
@@ -235,10 +239,11 @@ async function contractRoutes(fastify, options) {
       return { success: true, data: [] };
     }
 
-    // 해당 의사 이메일로 발송된 계약서 중 서명 대기중인 것
+    // 해당 의사 이메일로 발송된 계약서 중 서명 대기중인 것 (대소문자 무시)
+    const normalizedEmail = doctorEmail.toLowerCase().trim();
     const contracts = await prisma.contract.findMany({
       where: {
-        doctorEmail: doctorEmail,
+        doctorEmail: { equals: normalizedEmail, mode: 'insensitive' },
         status: { in: ['sent', 'pending'] }
       },
       include: {
@@ -333,7 +338,7 @@ async function contractRoutes(fastify, options) {
       }
     });
 
-    // 병원 정보를 최상위로 병합
+    // 병원 정보를 최상위로 병합 + 민감정보 필터링
     const formattedContracts = contracts.map(({ hospitalContract, ...contract }) => ({
       ...contract,
       hospitalName: hospitalContract?.hospitalName,
@@ -407,16 +412,16 @@ async function contractRoutes(fastify, options) {
         });
       }
 
-      // 병원 정보를 최상위로 병합
+      // 병원 정보를 최상위로 병합 + 민감정보 필터링
       const { hospitalContract, ...contractData } = contract;
-      const responseData = {
+      const responseData = ({
         ...contractData,
         type: 'daily',
         hospitalName: hospitalContract?.hospitalName,
         directorName: hospitalContract?.directorName,
         hospitalAddress: hospitalContract?.hospitalAddress,
         hospitalPhone: hospitalContract?.hospitalPhone
-      };
+      });
 
       return {
         success: true,
@@ -451,14 +456,14 @@ async function contractRoutes(fastify, options) {
       const { hospitalContract: hospData, ...laborData } = laborContract;
       return {
         success: true,
-        data: {
+        data: ({
           ...laborData,
           type: 'regular',
           hospitalName: hospData?.hospitalName,
           directorName: hospData?.directorName,
           hospitalAddress: hospData?.hospitalAddress,
           hospitalPhone: hospData?.hospitalPhone
-        }
+        })
       };
     }
 
@@ -508,11 +513,18 @@ async function contractRoutes(fastify, options) {
         });
       }
 
-      // 이미 발송된 계약서는 재발송 불가
-      if (contract.status !== 'draft') {
+      // 서명/거부된 계약서는 재발송 불가
+      if (contract.status !== 'draft' && contract.status !== 'sent') {
         return reply.status(400).send({
           success: false,
-          message: '초안 상태의 계약서만 발송할 수 있습니다.'
+          message: '초안 또는 발송 상태의 계약서만 발송할 수 있습니다.'
+        });
+      }
+
+      // 기존 초대가 있으면 삭제 (재발송 시)
+      if (contract.status === 'sent') {
+        await prisma.contractInvitation.deleteMany({
+          where: { contractId: id }
         });
       }
 
@@ -538,13 +550,23 @@ async function contractRoutes(fastify, options) {
         }
       });
 
-      // 이메일 발송
+      // 이메일 발송 (병원명, 의사명 포함)
       const { sendContractInvitationEmail } = await import('../utils/email.js');
-      await sendContractInvitationEmail(contract.doctorEmail, invitationToken, 'contract');
+      const hospitalInfo = await prisma.hospital.findUnique({ where: { id: contract.hospitalId } });
+      await sendContractInvitationEmail(
+        contract.doctorEmail,
+        invitationToken,
+        'contract',
+        {
+          hospitalName: hospitalInfo?.hospitalName || '',
+          doctorName: contract.doctorName,
+          contractNumber: contract.contractNumber
+        }
+      );
 
       return {
         success: true,
-        message: '계약서가 발송되었습니다.',
+        message: contract.status === 'sent' ? '계약서가 재발송되었습니다.' : '계약서가 발송되었습니다.',
         data: { invitationToken }
       };
     }
@@ -563,11 +585,18 @@ async function contractRoutes(fastify, options) {
         });
       }
 
-      // 이미 발송된 계약서는 재발송 불가
-      if (laborContract.status !== 'draft') {
+      // 서명/거부된 계약서는 재발송 불가
+      if (laborContract.status !== 'draft' && laborContract.status !== 'sent') {
         return reply.status(400).send({
           success: false,
-          message: '초안 상태의 계약서만 발송할 수 있습니다.'
+          message: '초안 또는 발송 상태의 계약서만 발송할 수 있습니다.'
+        });
+      }
+
+      // 기존 초대가 있으면 삭제 (재발송 시)
+      if (laborContract.status === 'sent') {
+        await prisma.laborContractInvitation.deleteMany({
+          where: { laborContractId: id }
         });
       }
 
@@ -599,7 +628,7 @@ async function contractRoutes(fastify, options) {
 
       return {
         success: true,
-        message: '계약서가 발송되었습니다.',
+        message: laborContract.status === 'sent' ? '계약서가 재발송되었습니다.' : '계약서가 발송되었습니다.',
         data: { invitationToken }
       };
     }
@@ -700,14 +729,14 @@ async function contractRoutes(fastify, options) {
 
       // 병원 정보를 최상위로 병합
       const { hospitalContract, ...contractData } = contractInvitation.contract;
-      const responseData = {
+      const responseData = ({
         ...contractData,
         type: 'daily',
         hospitalName: hospitalContract?.hospitalName,
         directorName: hospitalContract?.directorName,
         hospitalAddress: hospitalContract?.hospitalAddress,
         hospitalPhone: hospitalContract?.hospitalPhone
-      };
+      });
 
       return {
         success: true,
@@ -740,10 +769,10 @@ async function contractRoutes(fastify, options) {
 
       return {
         success: true,
-        data: {
+        data: ({
           ...laborInvitation.laborContract,
           type: 'regular'
-        }
+        })
       };
     }
 
@@ -817,7 +846,7 @@ async function contractRoutes(fastify, options) {
         });
       }
 
-      // 계약서 서명 처리
+      // 계약서 서명 처리 + 주민번호 즉시 삭제 (개인정보 보호)
       await prisma.contract.update({
         where: { id: contractInvitation.contractId },
         data: {
@@ -867,7 +896,7 @@ async function contractRoutes(fastify, options) {
         });
       }
 
-      // 계약서 서명 처리
+      // 계약서 서명 처리 + 주민번호 즉시 삭제 (개인정보 보호)
       await prisma.laborContract.update({
         where: { id: laborInvitation.laborContractId },
         data: {
@@ -1061,6 +1090,91 @@ async function contractRoutes(fastify, options) {
       success: false,
       message: '계약서를 찾을 수 없습니다.'
     });
+  });
+  /**
+   * 계약서 개인정보 삭제 (의사 요청)
+   * POST /api/contracts/invitation/:token/delete-personal-info
+   */
+  fastify.post('/invitation/:token/delete-personal-info', async (request, reply) => {
+    const { token } = request.params;
+
+    // 로그인 확인
+    const authToken = request.headers.authorization?.replace('Bearer ', '');
+    if (!authToken) {
+      return reply.status(401).send({ success: false, message: '로그인이 필요합니다.' });
+    }
+    const session = await prisma.session.findFirst({ where: { accessToken: authToken } });
+    if (!session || session.userType !== 'doctor') {
+      return reply.status(401).send({ success: false, message: '의사 계정으로 로그인해야 합니다.' });
+    }
+    const doctor = await prisma.doctor.findUnique({ where: { id: session.userId } });
+    if (!doctor) {
+      return reply.status(401).send({ success: false, message: '의사 정보를 찾을 수 없습니다.' });
+    }
+
+    // 일용직 계약서 초대 확인
+    const contractInvitation = await prisma.contractInvitation.findUnique({
+      where: { invitationToken: token },
+      include: { contract: true }
+    });
+
+    if (contractInvitation) {
+      const contract = contractInvitation.contract;
+
+      // 본인 계약서인지 확인
+      if (contract.doctorEmail !== doctor.email) {
+        return reply.status(403).send({ success: false, message: '본인의 계약서만 개인정보를 삭제할 수 있습니다.' });
+      }
+
+      // 서명 완료 또는 거부된 계약서만 삭제 가능
+      if (contract.status !== 'signed' && contract.status !== 'rejected') {
+        return reply.status(400).send({ success: false, message: '서명 완료 또는 거부된 계약서만 개인정보를 삭제할 수 있습니다.' });
+      }
+
+      // 개인정보 삭제
+      await prisma.contract.update({
+        where: { id: contract.id },
+        data: {
+          doctorRegistrationNumber: null,
+          doctorAccountNumber: null,
+          doctorBankName: null,
+          doctorPhone: null,
+        }
+      });
+
+      return { success: true, message: '개인정보가 완전히 삭제되었습니다.' };
+    }
+
+    // 근로계약서 초대 확인
+    const laborInvitation = await prisma.laborContractInvitation.findUnique({
+      where: { invitationToken: token },
+      include: { laborContract: true }
+    });
+
+    if (laborInvitation) {
+      const lc = laborInvitation.laborContract;
+      const lcEmail = lc.employeeEmail;
+
+      if (lcEmail !== doctor.email) {
+        return reply.status(403).send({ success: false, message: '본인의 계약서만 개인정보를 삭제할 수 있습니다.' });
+      }
+
+      if (lc.status !== 'signed' && lc.status !== 'rejected') {
+        return reply.status(400).send({ success: false, message: '서명 완료 또는 거부된 계약서만 개인정보를 삭제할 수 있습니다.' });
+      }
+
+      await prisma.laborContract.update({
+        where: { id: lc.id },
+        data: {
+          employeeRegistrationNumber: null,
+          employeePhone: null,
+        }
+      });
+
+      return { success: true, message: '개인정보가 완전히 삭제되었습니다.' };
+    }
+
+    return reply.status(404).send({ success: false, message: '유효하지 않은 초대 링크입니다.' });
   });
 }
 

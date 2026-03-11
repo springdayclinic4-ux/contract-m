@@ -139,6 +139,10 @@ export const contractAPI = {
   // 의사 대기중 계약서 조회
   getMyPending: () =>
     api.get('/contracts/my-pending'),
+
+  // 개인정보 삭제 (의사 요청)
+  deletePersonalInfo: (token: string) =>
+    api.post(`/contracts/invitation/${token}/delete-personal-info`),
 };
 
 // 통계 API
@@ -150,6 +154,36 @@ export const statisticsAPI = {
   // 내 통계 조회
   getMy: () =>
     api.get('/statistics/my'),
+};
+
+// 관리자 API
+export const adminAPI = {
+  sendCode: (email: string) =>
+    api.post('/auth/admin-send-code', { email }),
+
+  verifyCode: (email: string, code: string) =>
+    api.post('/auth/admin-verify-code', { email, code }),
+
+  getStats: (token: string) =>
+    api.get('/admin/stats', { headers: { Authorization: `Bearer ${token}` } }),
+
+  getUsers: (token: string, params: any) =>
+    api.get('/admin/users', { headers: { Authorization: `Bearer ${token}` }, params }),
+
+  getUserDetail: (token: string, type: string, id: string) =>
+    api.get(`/admin/users/${type}/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+
+  deleteUser: (token: string, type: string, id: string) =>
+    api.delete(`/admin/users/${type}/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+
+  getContracts: (token: string, params: any) =>
+    api.get('/admin/contracts', { headers: { Authorization: `Bearer ${token}` }, params }),
+
+  getContractDetail: (token: string, type: string, id: string) =>
+    api.get(`/admin/contracts/${type}/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+
+  deleteContract: (token: string, type: string, id: string) =>
+    api.delete(`/admin/contracts/${type}/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
 };
 
 // 사용자 API

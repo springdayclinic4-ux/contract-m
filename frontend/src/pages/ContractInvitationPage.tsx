@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { contractAPI, authAPI } from '../lib/api';
-import DailyContractTemplate from '../components/DailyContractTemplate';
+import CompleteDailyContractTemplate from '../components/CompleteDailyContractTemplate';
 
 export default function ContractInvitationPage() {
   const { token } = useParams<{ token: string }>();
@@ -22,6 +22,10 @@ export default function ContractInvitationPage() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+
+  // 개인정보 삭제
+  const [deletingInfo, setDeletingInfo] = useState(false);
+  const [showDeletedModal, setShowDeletedModal] = useState(false);
 
   // 서명 캔버스
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -281,34 +285,33 @@ export default function ContractInvitationPage() {
   const isDaily = contract.type === 'daily';
   const canSign = contract.status === 'sent' || contract.status === 'pending';
 
-  // 계약서 템플릿 데이터 구성
+  // 계약서 템플릿 데이터 구성 (CompleteDailyContractTemplate은 snake_case props 사용)
   const templateData = isDaily ? {
-    contractNumber: contract.contractNumber,
-    hospitalName: contract.hospitalName,
-    hospitalAddress: contract.hospitalAddress,
-    directorName: contract.directorName,
-    doctorName: contract.doctorName,
-    doctorLicenseNumber: contract.doctorLicenseNumber,
-    doctorAddress: contract.doctorAddress,
-    doctorPhone: contract.doctorPhone,
-    doctorRegistrationNumber: contract.doctorRegistrationNumber,
+    hospital_name: contract.hospitalName,
+    director_name: contract.directorName,
+    hospital_address: contract.hospitalAddress,
+    doctor_name: contract.doctorName,
+    doctor_registration_number: contract.doctorRegistrationNumber,
+    doctor_phone: contract.doctorPhone,
+    doctor_license_number: contract.doctorLicenseNumber,
+    doctor_address: contract.doctorAddress,
+    bank_name: contract.doctorBankName,
+    account_number: contract.doctorAccountNumber,
     workDates: contract.workDates,
-    startTime: contract.startTime,
-    endTime: contract.endTime,
-    breakTime: contract.breakTime,
-    wageGross: contract.wageGross,
-    wageNet: contract.wageNet,
-    wageType: contract.wageType,
-    bankName: contract.doctorBankName,
-    accountNumber: contract.doctorAccountNumber,
-    specialConditions: contract.specialConditions,
-    createdAt: contract.createdAt,
-    signatureImageUrl: contract.signatureImageUrl,
-    hospitalSignatureUrl: contract.hospitalSignatureUrl,
-    taxMethod: contract.taxMethod || 'business',
-    includeSecurityPledge: contract.includeSecurityPledge !== false,
-    includePayStub: contract.includePayStub !== false,
-    includeCrimeCheck: contract.includeCrimeCheck !== false,
+    start_time: contract.startTime,
+    end_time: contract.endTime,
+    break_time: contract.breakTime,
+    wage_gross: contract.wageGross,
+    wage_net: contract.wageNet,
+    wage_type: contract.wageType,
+    tax_method: contract.taxMethod || 'business',
+    payment_date: contract.paymentDate || 'same_day',
+    special_conditions: contract.specialConditions,
+    include_security_pledge: contract.includeSecurityPledge !== false,
+    include_pay_stub: contract.includePayStub !== false,
+    include_crime_check: contract.includeCrimeCheck !== false,
+    signature_image_url: contract.signatureImageUrl,
+    hospital_signature_url: contract.hospitalSignatureUrl,
   } : null;
 
   return (
@@ -475,7 +478,7 @@ export default function ContractInvitationPage() {
           {/* 계약서 본문 */}
           {isDaily && templateData && (
             <div className="border rounded-lg mb-8">
-              <DailyContractTemplate data={templateData} />
+              <CompleteDailyContractTemplate data={templateData} />
             </div>
           )}
 
@@ -505,13 +508,18 @@ export default function ContractInvitationPage() {
             </div>
           )}
 
-          {/* 서명 이미지 표시 (이미 서명된 경우) */}
-          {contract.signatureImageUrl && (
-            <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <h3 className="text-lg font-semibold text-green-800 mb-3">서명 이미지</h3>
-              <div className="bg-white border rounded p-4 inline-block">
-                <img src={contract.signatureImageUrl} alt="서명" className="max-h-24" />
-              </div>
+          {/* 인쇄 버튼 */}
+          {isLoggedIn && (
+            <div className="mb-4 flex justify-end">
+              <button
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-semibold rounded-lg transition-colors print:hidden"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                인쇄하기
+              </button>
             </div>
           )}
 
@@ -620,8 +628,93 @@ export default function ContractInvitationPage() {
               이 계약서는 현재 서명할 수 없는 상태입니다.
             </div>
           )}
+
+          {/* 개인정보 삭제 버튼 - 서명/거부 완료 후 의사만 */}
+          {isLoggedIn && (contract.status === 'signed' || contract.status === 'rejected') && (
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-5">
+                <div className="flex items-start gap-3">
+                  <svg className="w-6 h-6 text-orange-600 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-orange-800 mb-1">개인정보 삭제</h3>
+                    <p className="text-sm text-orange-700 mb-3">
+                      계약서에 포함된 주민등록번호, 계좌번호, 연락처 등 민감한 개인정보를 서버에서 완전히 삭제합니다.
+                      삭제된 정보는 복구할 수 없습니다.
+                    </p>
+                    <button
+                      onClick={async () => {
+                        if (!confirm('정말로 개인정보를 삭제하시겠습니까?\n삭제된 정보는 복구할 수 없습니다.')) return;
+                        setDeletingInfo(true);
+                        try {
+                          const { data } = await contractAPI.deletePersonalInfo(token!);
+                          if (data.success) {
+                            setShowDeletedModal(true);
+                            loadContract();
+                          }
+                        } catch (err: any) {
+                          alert(err.response?.data?.message || '개인정보 삭제에 실패했습니다.');
+                        } finally {
+                          setDeletingInfo(false);
+                        }
+                      }}
+                      disabled={deletingInfo}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      {deletingInfo ? (
+                        <>
+                          <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          삭제 중...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          개인정보 삭제하기
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* 개인정보 삭제 완료 모달 */}
+      {showDeletedModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-fade-in">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-5">
+              <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">삭제 완료</h2>
+            <p className="text-gray-600 mb-2">
+              계약서에 포함된 개인정보가 서버에서 완전히 삭제되었습니다.
+            </p>
+            <ul className="text-sm text-gray-500 mb-6 space-y-1">
+              <li>- 주민등록번호</li>
+              <li>- 계좌번호 / 은행명</li>
+              <li>- 연락처</li>
+            </ul>
+            <p className="text-xs text-gray-400 mb-6">삭제된 정보는 복구할 수 없으며, 어디에도 보관되지 않습니다.</p>
+            <button
+              onClick={() => setShowDeletedModal(false)}
+              className="w-full py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg"
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

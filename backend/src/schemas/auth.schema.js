@@ -47,6 +47,7 @@ export const registerDoctorSchema = {
     account_number: z.string().optional(),
     terms_service_agreed: z.boolean().optional().default(false),
     terms_privacy_agreed: z.boolean().optional().default(false),
+    terms_third_party_agreed: z.boolean().optional().default(false),
     marketing_agreed: z.boolean().optional().default(false)
   })
 };

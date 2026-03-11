@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { contractAPI } from '../lib/api';
-import DailyContractTemplate from '../components/DailyContractTemplate';
+import CompleteDailyContractTemplate from '../components/CompleteDailyContractTemplate';
 import RegularContractTemplate from '../components/RegularContractTemplate';
 
 export default function ContractDetailPage() {
@@ -73,12 +73,16 @@ export default function ContractDetailPage() {
   };
 
   const handleSend = async () => {
-    if (!confirm('이 계약서를 발송하시겠습니까?')) return;
+    const isResend = contract?.status === 'sent';
+    const msg = isResend
+      ? '이 계약서를 다시 발송하시겠습니까?\n기존 초대 링크는 무효화되고 새 링크가 발송됩니다.'
+      : '이 계약서를 발송하시겠습니까?';
+    if (!confirm(msg)) return;
 
     try {
       const { data } = await contractAPI.send(id!);
       if (data.success) {
-        alert('계약서가 발송되었습니다.');
+        alert(isResend ? '계약서가 재발송되었습니다.' : '계약서가 발송되었습니다.');
         loadContract();
       }
     } catch (err: any) {
@@ -213,32 +217,31 @@ export default function ContractDetailPage() {
   const statusColor = getStatusColor(contract.status);
 
   const dailyContractData = isDaily ? {
-    contractNumber: contract.contractNumber,
-    hospitalName: contract.hospitalName || '',
-    hospitalAddress: contract.hospitalAddress || '',
-    directorName: contract.directorName || '',
-    doctorName: contract.doctorName,
-    doctorLicenseNumber: contract.doctorLicenseNumber,
-    doctorAddress: contract.doctorAddress,
-    doctorPhone: contract.doctorPhone,
-    doctorRegistrationNumber: contract.doctorRegistrationNumber,
+    hospital_name: contract.hospitalName || '',
+    hospital_address: contract.hospitalAddress || '',
+    director_name: contract.directorName || '',
+    doctor_name: contract.doctorName,
+    doctor_license_number: contract.doctorLicenseNumber,
+    doctor_address: contract.doctorAddress,
+    doctor_phone: contract.doctorPhone,
+    doctor_registration_number: contract.doctorRegistrationNumber,
     workDates: contract.workDates,
-    startTime: contract.startTime,
-    endTime: contract.endTime,
-    breakTime: contract.breakTime,
-    wageGross: contract.wageGross,
-    wageNet: contract.wageNet,
-    wageType: contract.wageType,
-    bankName: contract.doctorBankName,
-    accountNumber: contract.doctorAccountNumber,
-    specialConditions: contract.specialConditions,
-    createdAt: contract.createdAt,
-    signatureImageUrl: contract.signatureImageUrl,
-    hospitalSignatureUrl: contract.hospitalSignatureUrl,
-    taxMethod: contract.taxMethod || 'business',
-    includeSecurityPledge: contract.includeSecurityPledge !== false,
-    includePayStub: contract.includePayStub !== false,
-    includeCrimeCheck: contract.includeCrimeCheck !== false,
+    start_time: contract.startTime,
+    end_time: contract.endTime,
+    break_time: contract.breakTime,
+    wage_gross: contract.wageGross,
+    wage_net: contract.wageNet,
+    wage_type: contract.wageType,
+    bank_name: contract.doctorBankName,
+    account_number: contract.doctorAccountNumber,
+    special_conditions: contract.specialConditions,
+    tax_method: contract.taxMethod || 'business',
+    payment_date: contract.paymentDate || 'same_day',
+    include_security_pledge: contract.includeSecurityPledge !== false,
+    include_pay_stub: contract.includePayStub !== false,
+    include_crime_check: contract.includeCrimeCheck !== false,
+    signature_image_url: contract.signatureImageUrl,
+    hospital_signature_url: contract.hospitalSignatureUrl,
   } : null;
 
   const regularContractData = !isDaily ? {
@@ -325,7 +328,7 @@ export default function ContractDetailPage() {
       <div className="max-w-5xl mx-auto py-8 px-4 print:p-0 flex flex-col items-center">
         <div id="print-area" className="print-area bg-white shadow-lg mb-6 print:shadow-none" style={{ width: '210mm', maxWidth: '100%' }}>
           {isDaily && dailyContractData ? (
-            <DailyContractTemplate data={dailyContractData} />
+            <CompleteDailyContractTemplate data={dailyContractData} />
           ) : regularContractData ? (
             <RegularContractTemplate data={regularContractData} />
           ) : null}
@@ -405,11 +408,14 @@ export default function ContractDetailPage() {
             </span>
           )}
           {contract.status === 'draft' && (
-            <>
-              <button onClick={handleSend} className="btn-primary px-6">
-                발송하기
-              </button>
-            </>
+            <button onClick={handleSend} className="btn-primary px-6">
+              발송하기
+            </button>
+          )}
+          {contract.status === 'sent' && (
+            <button onClick={handleSend} className="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors">
+              다시 보내기
+            </button>
           )}
           <button onClick={handlePrint} className="btn-primary px-6">
             인쇄 / PDF 저장

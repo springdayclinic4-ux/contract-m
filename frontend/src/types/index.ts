@@ -59,6 +59,7 @@ export interface RegisterDoctorRequest {
   account_number?: string;
   terms_service_agreed: boolean;
   terms_privacy_agreed: boolean;
+  terms_third_party_agreed: boolean;
   marketing_agreed: boolean;
 }
 

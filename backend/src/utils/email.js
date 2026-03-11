@@ -103,32 +103,86 @@ export async function sendPasswordResetEmail(email, resetCode) {
 }
 
 /**
+ * 관리자 로그인 인증코드 발송
+ */
+export async function sendAdminLoginCode(email, code) {
+  if (useMockEmail || !transporter) {
+    console.log('\n========================================');
+    console.log('[MOCK] 관리자 로그인 인증 코드');
+    console.log(`받는 사람: ${email}`);
+    console.log(`인증 코드: ${code}`);
+    console.log('========================================\n');
+    return { success: true, messageId: 'mock-mode' };
+  }
+
+  const mailOptions = {
+    from: `"THERANOVA 관리자" <${gmailUser}>`,
+    to: email,
+    subject: '[THERANOVA] 관리자 로그인 인증 코드',
+    html: `
+      <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; max-width: 500px; margin: 0 auto; padding: 30px; border: 1px solid #e5e7eb; border-radius: 12px;">
+        <h2 style="color: #0f172a; margin-bottom: 20px;">관리자 로그인 인증</h2>
+        <p>관리자 콘솔 로그인 요청이 있었습니다.</p>
+        <p>아래 인증 코드를 입력해주세요.</p>
+        <div style="background: linear-gradient(135deg, #0f172a 0%, #334155 100%); padding: 25px; text-align: center; margin: 25px 0; border-radius: 8px;">
+          <h1 style="color: #fff; letter-spacing: 8px; margin: 0; font-size: 32px;">${code}</h1>
+        </div>
+        <p style="color: #6b7280; font-size: 14px;">이 코드는 <strong>5분간</strong> 유효합니다.</p>
+        <p style="color: #ef4444; font-size: 13px; font-weight: bold;">본인이 요청한 것이 아니라면 즉시 무시하세요. 누군가 관리자 접근을 시도하고 있을 수 있습니다.</p>
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+        <p style="color: #9ca3af; font-size: 12px;">THERANOVA Operations Console</p>
+      </div>
+    `,
+  };
+
+  try {
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`[EMAIL] 관리자 인증 코드 발송 완료: ${email}`);
+    return { success: true, messageId: result.messageId };
+  } catch (error) {
+    console.error('[EMAIL] 발송 실패:', error.message);
+    throw new Error('이메일 발송에 실패했습니다.');
+  }
+}
+
+/**
  * 계약서 초대 이메일 발송
  */
-export async function sendContractInvitationEmail(email, invitationToken, contractType = 'contract') {
+export async function sendContractInvitationEmail(email, invitationToken, contractType = 'contract', contractInfo = {}) {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
   const invitationLink = `${frontendUrl}/contracts/invitation/${invitationToken}`;
   const contractTypeName = contractType === 'contract' ? '의사 일용직 근로계약서' : '근로계약서';
+  const { hospitalName, doctorName, contractNumber } = contractInfo;
 
   // Mock 모드
   if (useMockEmail || !transporter) {
     console.log('\n========================================');
     console.log('[MOCK] 계약서 초대 이메일');
     console.log(`받는 사람: ${email}`);
+    console.log(`병원: ${hospitalName || '-'}, 의사: ${doctorName || '-'}, 번호: ${contractNumber || '-'}`);
     console.log(`초대 링크: ${invitationLink}`);
     console.log('========================================\n');
     return { success: true, messageId: 'mock-mode' };
   }
 
+  // 계약서 정보 표시
+  const infoSection = (hospitalName || doctorName || contractNumber) ? `
+        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 16px 0;">
+          ${hospitalName ? `<p style="margin: 4px 0; font-size: 14px;"><strong>병원:</strong> ${hospitalName}</p>` : ''}
+          ${doctorName ? `<p style="margin: 4px 0; font-size: 14px;"><strong>수신자:</strong> ${doctorName}</p>` : ''}
+          ${contractNumber ? `<p style="margin: 4px 0; font-size: 14px;"><strong>계약서 번호:</strong> ${contractNumber}</p>` : ''}
+        </div>` : '';
+
   const mailOptions = {
     from: `"HOS 계약관리" <${gmailUser}>`,
     to: email,
-    subject: `[HOS] ${contractTypeName} 서명 요청`,
+    subject: `[HOS] ${hospitalName ? hospitalName + ' - ' : ''}${contractTypeName} 서명 요청`,
     html: `
       <div style="font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; max-width: 500px; margin: 0 auto; padding: 30px; border: 1px solid #e5e7eb; border-radius: 12px;">
         <h2 style="color: #1e40af; margin-bottom: 20px;">${contractTypeName} 서명 요청</h2>
-        <p>안녕하세요,</p>
+        <p>안녕하세요${doctorName ? ` ${doctorName} 선생님` : ''},</p>
         <p>${contractTypeName} 서명을 요청받았습니다.</p>
+        ${infoSection}
         <p>아래 버튼을 클릭하여 계약서를 확인하고 서명해주세요.</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${invitationLink}"

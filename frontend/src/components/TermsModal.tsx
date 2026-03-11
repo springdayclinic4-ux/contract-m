@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 interface TermsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -161,7 +159,8 @@ const TERMS: Record<string, { title: string; content: string }> = {
 
 1. 제공받는 자
   - 근로계약 상대방 (병원 또는 의사/직원)
-  - 회사의 부가서비스 운영을 위한 관계사 (오늘닥터, AIra CRM 등)
+  - Amazon Web Services, Inc. (AWS) - 클라우드 서버 및 데이터 저장·처리
+  - 주식회사 테라노바 기타서비스 (오늘닥터, AIra CRM 등)
 
 2. 제공하는 개인정보 항목
   - 성명, 연락처, 주소, 면허번호(의사), 주민등록번호(계약서 기재 시)

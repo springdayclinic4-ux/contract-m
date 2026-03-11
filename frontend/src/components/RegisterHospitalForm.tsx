@@ -4,10 +4,22 @@ import { authAPI } from '../lib/api';
 import type { RegisterHospitalRequest } from '../types';
 import TermsModal, { TermsViewButton } from './TermsModal';
 
+// Validation helpers
+const validators = {
+  password: (v: string) => v.length >= 8 ? '' : '비밀번호는 8자 이상이어야 합니다.',
+  businessNumber: (v: string) => /^\d{3}-\d{2}-\d{5}$/.test(v) ? '' : '사업자등록번호 형식이 올바르지 않습니다. (000-00-00000)',
+  name: (v: string) => /^[가-힣a-zA-Z\s]+$/.test(v) ? '' : '이름은 한글 또는 영어만 입력 가능합니다.',
+  phone: (v: string) => {
+    const nums = v.replace(/[^0-9]/g, '');
+    return nums.length >= 9 && nums.length <= 11 ? '' : '연락처 형식이 올바르지 않습니다.';
+  },
+};
+
 export default function RegisterHospitalForm({ verifiedEmail, onEmailVerified }: { verifiedEmail?: string | null; onEmailVerified?: (email: string) => void }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [step, setStep] = useState<'email' | 'form'>(verifiedEmail ? 'form' : 'email');
   const [termsModal, setTermsModal] = useState<'service' | 'privacy' | 'thirdParty' | 'marketing' | null>(null);
 
@@ -17,8 +29,6 @@ export default function RegisterHospitalForm({ verifiedEmail, onEmailVerified }:
   const [codeSent, setCodeSent] = useState(false);
   const [verified, setVerified] = useState(!!verifiedEmail);
 
-  // 회원가입 폼
-  // 자동 하이픈 포맷 함수
   const formatBusinessNumber = (value: string) => {
     const nums = value.replace(/[^0-9]/g, '').slice(0, 10);
     if (nums.length <= 3) return nums;
@@ -55,6 +65,40 @@ export default function RegisterHospitalForm({ verifiedEmail, onEmailVerified }:
     marketing_agreed: false,
   });
 
+  const validateField = (field: string, value: string) => {
+    let err = '';
+    if (!value.trim()) return ''; // empty handled by required
+    switch (field) {
+      case 'password': err = validators.password(value); break;
+      case 'business_registration_number': err = validators.businessNumber(value); break;
+      case 'director_name': err = validators.name(value); break;
+      case 'hospital_phone': err = validators.phone(value); break;
+      case 'manager_name': if (value.trim()) err = validators.name(value); break;
+      case 'manager_phone': if (value.trim()) err = validators.phone(value); break;
+    }
+    return err;
+  };
+
+  const handleFieldChange = (field: string, value: string) => {
+    setFormData({ ...formData, [field]: value });
+    const err = validateField(field, value);
+    setFieldErrors(prev => ({ ...prev, [field]: err }));
+  };
+
+  const validateAll = (): boolean => {
+    const errors: Record<string, string> = {};
+    errors.password = validators.password(formData.password);
+    errors.business_registration_number = validators.businessNumber(formData.business_registration_number);
+    if (formData.director_name) errors.director_name = validators.name(formData.director_name);
+    if (formData.hospital_phone) errors.hospital_phone = validators.phone(formData.hospital_phone);
+    if (formData.manager_name) errors.manager_name = validators.name(formData.manager_name);
+    if (formData.manager_phone) errors.manager_phone = validators.phone(formData.manager_phone);
+
+    const filtered = Object.fromEntries(Object.entries(errors).filter(([, v]) => v));
+    setFieldErrors(filtered);
+    return Object.keys(filtered).length === 0;
+  };
+
   const handleSendCode = async () => {
     setError('');
     setLoading(true);
@@ -87,8 +131,13 @@ export default function RegisterHospitalForm({ verifiedEmail, onEmailVerified }:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.terms_service_agreed || !formData.terms_privacy_agreed) {
+
+    if (!validateAll()) {
+      setError('입력 양식을 확인해주세요.');
+      return;
+    }
+
+    if (!formData.terms_service_agreed || !formData.terms_privacy_agreed || !formData.terms_third_party_agreed) {
       setError('필수 약관에 동의해주세요.');
       return;
     }
@@ -105,6 +154,11 @@ export default function RegisterHospitalForm({ verifiedEmail, onEmailVerified }:
     } finally {
       setLoading(false);
     }
+  };
+
+  const FieldError = ({ field }: { field: string }) => {
+    if (!fieldErrors[field]) return null;
+    return <p className="text-red-500 text-xs mt-1">{fieldErrors[field]}</p>;
   };
 
   if (step === 'email') {
@@ -186,12 +240,12 @@ export default function RegisterHospitalForm({ verifiedEmail, onEmailVerified }:
         <input
           type="password"
           value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          className="input-field"
+          onChange={(e) => handleFieldChange('password', e.target.value)}
+          className={`input-field ${fieldErrors.password ? 'border-red-400' : ''}`}
           placeholder="최소 8자 이상"
-          minLength={8}
           required
         />
+        <FieldError field="password" />
       </div>
 
       {/* 사업자등록번호 */}
@@ -200,11 +254,12 @@ export default function RegisterHospitalForm({ verifiedEmail, onEmailVerified }:
         <input
           type="text"
           value={formData.business_registration_number}
-          onChange={(e) => setFormData({ ...formData, business_registration_number: formatBusinessNumber(e.target.value) })}
-          className="input-field"
+          onChange={(e) => handleFieldChange('business_registration_number', formatBusinessNumber(e.target.value))}
+          className={`input-field ${fieldErrors.business_registration_number ? 'border-red-400' : ''}`}
           placeholder="000-00-00000"
           required
         />
+        <FieldError field="business_registration_number" />
       </div>
 
       {/* 병원명 */}
@@ -226,11 +281,12 @@ export default function RegisterHospitalForm({ verifiedEmail, onEmailVerified }:
         <input
           type="text"
           value={formData.director_name}
-          onChange={(e) => setFormData({ ...formData, director_name: e.target.value })}
-          className="input-field"
+          onChange={(e) => handleFieldChange('director_name', e.target.value)}
+          className={`input-field ${fieldErrors.director_name ? 'border-red-400' : ''}`}
           placeholder="홍길동"
           required
         />
+        <FieldError field="director_name" />
       </div>
 
       {/* 병원 주소 */}
@@ -252,11 +308,12 @@ export default function RegisterHospitalForm({ verifiedEmail, onEmailVerified }:
         <input
           type="tel"
           value={formData.hospital_phone}
-          onChange={(e) => setFormData({ ...formData, hospital_phone: formatPhone(e.target.value) })}
-          className="input-field"
+          onChange={(e) => handleFieldChange('hospital_phone', formatPhone(e.target.value))}
+          className={`input-field ${fieldErrors.hospital_phone ? 'border-red-400' : ''}`}
           placeholder="02-1234-5678"
           required
         />
+        <FieldError field="hospital_phone" />
       </div>
 
       {/* 담당자 정보 (선택) */}
@@ -266,20 +323,22 @@ export default function RegisterHospitalForm({ verifiedEmail, onEmailVerified }:
           <input
             type="text"
             value={formData.manager_name}
-            onChange={(e) => setFormData({ ...formData, manager_name: e.target.value })}
-            className="input-field"
+            onChange={(e) => handleFieldChange('manager_name', e.target.value)}
+            className={`input-field ${fieldErrors.manager_name ? 'border-red-400' : ''}`}
             placeholder="김담당"
           />
+          <FieldError field="manager_name" />
         </div>
         <div>
           <label className="label">담당자 연락처</label>
           <input
             type="tel"
             value={formData.manager_phone}
-            onChange={(e) => setFormData({ ...formData, manager_phone: formatPhone(e.target.value) })}
-            className="input-field"
+            onChange={(e) => handleFieldChange('manager_phone', formatPhone(e.target.value))}
+            className={`input-field ${fieldErrors.manager_phone ? 'border-red-400' : ''}`}
             placeholder="010-1234-5678"
           />
+          <FieldError field="manager_phone" />
         </div>
       </div>
 
@@ -319,9 +378,10 @@ export default function RegisterHospitalForm({ verifiedEmail, onEmailVerified }:
             checked={formData.terms_third_party_agreed}
             onChange={(e) => setFormData({ ...formData, terms_third_party_agreed: e.target.checked })}
             className="mt-1"
+            required
           />
           <span className="text-sm">
-            개인정보 제3자 제공에 동의합니다 (선택)
+            <span className="text-red-600">*</span> 개인정보 제3자 제공에 동의합니다
             <TermsViewButton onClick={() => setTermsModal('thirdParty')} />
           </span>
         </label>

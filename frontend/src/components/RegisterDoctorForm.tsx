@@ -5,12 +5,24 @@ import EmailVerification from './EmailVerification';
 import type { RegisterDoctorRequest } from '../types';
 import TermsModal, { TermsViewButton } from './TermsModal';
 
+// Validation helpers
+const validators = {
+  password: (v: string) => v.length >= 8 ? '' : '비밀번호는 8자 이상이어야 합니다.',
+  name: (v: string) => /^[가-힣a-zA-Z\s]+$/.test(v) ? '' : '이름은 한글 또는 영어만 입력 가능합니다.',
+  licenseNumber: (v: string) => /^\d{4,6}$/.test(v.replace(/[^0-9]/g, '')) ? '' : '면허번호는 숫자 4~6자리입니다.',
+  phone: (v: string) => {
+    const nums = v.replace(/[^0-9]/g, '');
+    return nums.length >= 10 && nums.length <= 11 ? '' : '연락처 형식이 올바르지 않습니다. (010-0000-0000)';
+  },
+};
+
 export default function RegisterDoctorForm({ redirectAfter, verifiedEmail, onEmailVerified }: { redirectAfter?: string | null; verifiedEmail?: string | null; onEmailVerified?: (email: string) => void }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [email, setEmail] = useState(verifiedEmail || '');
   const [verified, setVerified] = useState(!!verifiedEmail);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [termsModal, setTermsModal] = useState<'service' | 'privacy' | 'thirdParty' | 'marketing' | null>(null);
 
   const formatPhone = (value: string) => {
@@ -37,8 +49,38 @@ export default function RegisterDoctorForm({ redirectAfter, verifiedEmail, onEma
     account_number: '',
     terms_service_agreed: false,
     terms_privacy_agreed: false,
+    terms_third_party_agreed: false,
     marketing_agreed: false,
   });
+
+  const validateField = (field: string, value: string) => {
+    if (!value.trim()) return '';
+    switch (field) {
+      case 'password': return validators.password(value);
+      case 'name': return validators.name(value);
+      case 'license_number': return validators.licenseNumber(value);
+      case 'phone': return value.trim() ? validators.phone(value) : '';
+    }
+    return '';
+  };
+
+  const handleFieldChange = (field: string, value: string) => {
+    setFormData({ ...formData, [field]: value });
+    const err = validateField(field, value);
+    setFieldErrors(prev => ({ ...prev, [field]: err }));
+  };
+
+  const validateAll = (): boolean => {
+    const errors: Record<string, string> = {};
+    errors.password = validators.password(formData.password);
+    if (formData.name) errors.name = validators.name(formData.name);
+    if (formData.license_number) errors.license_number = validators.licenseNumber(formData.license_number);
+    if (formData.phone) errors.phone = validators.phone(formData.phone);
+
+    const filtered = Object.fromEntries(Object.entries(errors).filter(([, v]) => v));
+    setFieldErrors(filtered);
+    return Object.keys(filtered).length === 0;
+  };
 
   const handleEmailVerified = (vEmail: string) => {
     setEmail(vEmail);
@@ -49,8 +91,13 @@ export default function RegisterDoctorForm({ redirectAfter, verifiedEmail, onEma
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.terms_service_agreed || !formData.terms_privacy_agreed) {
+
+    if (!validateAll()) {
+      setError('입력 양식을 확인해주세요.');
+      return;
+    }
+
+    if (!formData.terms_service_agreed || !formData.terms_privacy_agreed || !formData.terms_third_party_agreed) {
       setError('필수 약관에 동의해주세요.');
       return;
     }
@@ -74,6 +121,11 @@ export default function RegisterDoctorForm({ redirectAfter, verifiedEmail, onEma
     }
   };
 
+  const FieldError = ({ field }: { field: string }) => {
+    if (!fieldErrors[field]) return null;
+    return <p className="text-red-500 text-xs mt-1">{fieldErrors[field]}</p>;
+  };
+
   if (!verified) {
     return <EmailVerification onVerified={handleEmailVerified} />;
   }
@@ -95,12 +147,12 @@ export default function RegisterDoctorForm({ redirectAfter, verifiedEmail, onEma
         <input
           type="password"
           value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          className="input-field"
+          onChange={(e) => handleFieldChange('password', e.target.value)}
+          className={`input-field ${fieldErrors.password ? 'border-red-400' : ''}`}
           placeholder="최소 8자 이상"
-          minLength={8}
           required
         />
+        <FieldError field="password" />
       </div>
 
       <div>
@@ -108,11 +160,12 @@ export default function RegisterDoctorForm({ redirectAfter, verifiedEmail, onEma
         <input
           type="text"
           value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className="input-field"
+          onChange={(e) => handleFieldChange('name', e.target.value)}
+          className={`input-field ${fieldErrors.name ? 'border-red-400' : ''}`}
           placeholder="홍길동"
           required
         />
+        <FieldError field="name" />
       </div>
 
       <div>
@@ -120,11 +173,12 @@ export default function RegisterDoctorForm({ redirectAfter, verifiedEmail, onEma
         <input
           type="text"
           value={formData.license_number}
-          onChange={(e) => setFormData({ ...formData, license_number: e.target.value })}
-          className="input-field"
+          onChange={(e) => handleFieldChange('license_number', e.target.value)}
+          className={`input-field ${fieldErrors.license_number ? 'border-red-400' : ''}`}
           placeholder="면허번호"
           required
         />
+        <FieldError field="license_number" />
       </div>
 
       <div>
@@ -144,10 +198,11 @@ export default function RegisterDoctorForm({ redirectAfter, verifiedEmail, onEma
         <input
           type="tel"
           value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: formatPhone(e.target.value) })}
-          className="input-field"
+          onChange={(e) => handleFieldChange('phone', formatPhone(e.target.value))}
+          className={`input-field ${fieldErrors.phone ? 'border-red-400' : ''}`}
           placeholder="010-1234-5678"
         />
+        <FieldError field="phone" />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -199,6 +254,20 @@ export default function RegisterDoctorForm({ redirectAfter, verifiedEmail, onEma
           <span className="text-sm">
             <span className="text-red-600">*</span> 개인정보 처리방침에 동의합니다
             <TermsViewButton onClick={() => setTermsModal('privacy')} />
+          </span>
+        </label>
+
+        <label className="flex items-start gap-2">
+          <input
+            type="checkbox"
+            checked={formData.terms_third_party_agreed}
+            onChange={(e) => setFormData({ ...formData, terms_third_party_agreed: e.target.checked })}
+            className="mt-1"
+            required
+          />
+          <span className="text-sm">
+            <span className="text-red-600">*</span> 개인정보 제3자 제공에 동의합니다
+            <TermsViewButton onClick={() => setTermsModal('thirdParty')} />
           </span>
         </label>
 

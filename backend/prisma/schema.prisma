@@ -60,6 +60,7 @@ model Doctor {
   emailVerified     Boolean  @default(false) @map("email_verified")
   termsServiceAgreed Boolean @default(false) @map("terms_service_agreed")
   termsPrivacyAgreed Boolean @default(false) @map("terms_privacy_agreed")
+  termsThirdPartyAgreed Boolean @default(false) @map("terms_third_party_agreed")
   marketingAgreed   Boolean  @default(false) @map("marketing_agreed")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
@@ -140,6 +141,7 @@ model Contract {
   wageNet                 Decimal? @map("wage_net") @db.Decimal(15, 2)
   wageType                String?  @map("wage_type") // 'gross' | 'net'
   taxMethod               String?  @map("tax_method") // 'business' | 'daily'
+  paymentDate             String?  @map("payment_date") @default("same_day") // 'same_day' | 'next_day' | 'weekly' | 'monthly_10' etc.
   specialConditions       String?  @map("special_conditions")
   includeSecurityPledge   Boolean  @default(true) @map("include_security_pledge")
   includePayStub          Boolean  @default(true) @map("include_pay_stub")

@@ -8,14 +8,24 @@ import ContractsListPage from './pages/ContractsListPage';
 import ContractDetailPage from './pages/ContractDetailPage';
 import ContractInvitationPage from './pages/ContractInvitationPage';
 import StatisticsPage from './pages/StatisticsPage';
+import AdminConsolePage from './pages/AdminConsolePage';
 import SettingsPage from './pages/SettingsPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+
+function RootRedirect() {
+  const token = localStorage.getItem('accessToken');
+  const user = localStorage.getItem('user');
+  if (token && user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <Navigate to="/login" replace />;
+}
 
 function App() {
   return (
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -26,6 +36,7 @@ function App() {
         <Route path="/contracts/:id" element={<ContractDetailPage />} />
         <Route path="/contracts" element={<ContractsListPage />} />
         <Route path="/statistics" element={<StatisticsPage />} />
+        <Route path="/ops-panel-7x9k2m" element={<AdminConsolePage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </BrowserRouter>

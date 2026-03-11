@@ -12,6 +12,30 @@ export default function DailyContractPage() {
   const [dateInput, setDateInput] = useState('');
 
   const [manualWage, setManualWage] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const fieldValidators: Record<string, (v: string) => string> = {
+    doctor_name: (v) => !v.trim() ? '' : /^[가-힣a-zA-Z\s]+$/.test(v) ? '' : '이름은 한글 또는 영어만 입력 가능합니다.',
+    doctor_email: (v) => !v.trim() ? '' : /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? '' : '올바른 이메일 형식을 입력해주세요.',
+    doctor_registration_number: (v) => {
+      if (!v.trim()) return '';
+      const nums = v.replace(/[^0-9]/g, '');
+      return nums.length === 13 ? '' : '주민등록번호는 숫자 13자리여야 합니다.';
+    },
+    doctor_phone: (v) => {
+      if (!v.trim()) return '';
+      const nums = v.replace(/[^0-9]/g, '');
+      return (nums.length >= 10 && nums.length <= 11) ? '' : '연락처 형식이 올바르지 않습니다. (010-0000-0000)';
+    },
+    doctor_license_number: (v) => !v.trim() ? '' : /\d/.test(v) ? '' : '면허번호를 올바르게 입력해주세요.',
+  };
+
+  const handleDoctorFieldChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (fieldValidators[field]) {
+      setFieldErrors(prev => ({ ...prev, [field]: fieldValidators[field](value) }));
+    }
+  };
 
   const [formData, setFormData] = useState({
     // 병원 정보
@@ -39,6 +63,7 @@ export default function DailyContractPage() {
     wage_net: '',
     wage_type: 'net' as 'gross' | 'net',
     tax_method: 'daily' as 'business' | 'daily',
+    payment_date: 'same_day' as string,
     special_conditions: '',
 
     // 부가 서류
@@ -200,6 +225,21 @@ export default function DailyContractPage() {
     if (!formData.doctor_address.trim()) missing.push('주소');
     if (workDates.length === 0) missing.push('근무일');
     if (!formData.wage_gross && !formData.wage_net) missing.push('급여 금액');
+
+    // Format validation
+    const formatErrors: Record<string, string> = {};
+    for (const [field, validator] of Object.entries(fieldValidators)) {
+      const val = (formData as any)[field];
+      if (val && val.trim()) {
+        const err = validator(val);
+        if (err) formatErrors[field] = err;
+      }
+    }
+    if (Object.keys(formatErrors).length > 0) {
+      setFieldErrors(prev => ({ ...prev, ...formatErrors }));
+      missing.push('양식 오류 (붉은색 표시 항목 확인)');
+    }
+
     return missing;
   };
 
@@ -440,63 +480,68 @@ export default function DailyContractPage() {
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">성명 *</label>
-                <input 
+                <input
                   type="text"
                   value={formData.doctor_name}
-                  onChange={(e) => setFormData({ ...formData, doctor_name: e.target.value })}
-                  placeholder="예: 김의사" 
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) => handleDoctorFieldChange('doctor_name', e.target.value)}
+                  placeholder="예: 김의사"
+                  className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${fieldErrors.doctor_name ? 'border-red-400' : 'border-gray-300'}`}
                   required
                 />
+                {fieldErrors.doctor_name && <p className="text-red-500 text-xs mt-1">{fieldErrors.doctor_name}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">이메일 * <span className="text-xs text-gray-500">(전자서명 발송용)</span></label>
-                <input 
+                <input
                   type="email"
                   value={formData.doctor_email}
-                  onChange={(e) => setFormData({ ...formData, doctor_email: e.target.value })}
-                  placeholder="예: doctor@example.com" 
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) => handleDoctorFieldChange('doctor_email', e.target.value)}
+                  placeholder="예: doctor@example.com"
+                  className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${fieldErrors.doctor_email ? 'border-red-400' : 'border-gray-300'}`}
                   required
                 />
+                {fieldErrors.doctor_email && <p className="text-red-500 text-xs mt-1">{fieldErrors.doctor_email}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">주민등록번호</label>
-                <input 
+                <label className="block text-sm font-medium text-gray-700 mb-1">주민등록번호 *</label>
+                <input
                   type="text"
                   value={formData.doctor_registration_number}
-                  onChange={(e) => setFormData({ ...formData, doctor_registration_number: e.target.value })}
-                  placeholder="예: 800101-1******" 
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) => handleDoctorFieldChange('doctor_registration_number', e.target.value)}
+                  placeholder="예: 800101-1******"
+                  className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${fieldErrors.doctor_registration_number ? 'border-red-400' : 'border-gray-300'}`}
                 />
+                {fieldErrors.doctor_registration_number && <p className="text-red-500 text-xs mt-1">{fieldErrors.doctor_registration_number}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">연락처</label>
-                <input 
+                <label className="block text-sm font-medium text-gray-700 mb-1">연락처 *</label>
+                <input
                   type="text"
                   value={formData.doctor_phone}
-                  onChange={(e) => setFormData({ ...formData, doctor_phone: e.target.value })}
-                  placeholder="예: 010-1234-5678" 
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) => handleDoctorFieldChange('doctor_phone', e.target.value)}
+                  placeholder="예: 010-1234-5678"
+                  className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${fieldErrors.doctor_phone ? 'border-red-400' : 'border-gray-300'}`}
                 />
+                {fieldErrors.doctor_phone && <p className="text-red-500 text-xs mt-1">{fieldErrors.doctor_phone}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">면허번호</label>
-                <input 
+                <label className="block text-sm font-medium text-gray-700 mb-1">면허번호 *</label>
+                <input
                   type="text"
                   value={formData.doctor_license_number}
-                  onChange={(e) => setFormData({ ...formData, doctor_license_number: e.target.value })}
-                  placeholder="예: 제 12345 호" 
-                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) => handleDoctorFieldChange('doctor_license_number', e.target.value)}
+                  placeholder="예: 제 12345 호"
+                  className={`w-full p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${fieldErrors.doctor_license_number ? 'border-red-400' : 'border-gray-300'}`}
                 />
+                {fieldErrors.doctor_license_number && <p className="text-red-500 text-xs mt-1">{fieldErrors.doctor_license_number}</p>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">주소</label>
-                <input 
+                <label className="block text-sm font-medium text-gray-700 mb-1">주소 *</label>
+                <input
                   type="text"
                   value={formData.doctor_address}
                   onChange={(e) => setFormData({ ...formData, doctor_address: e.target.value })}
-                  placeholder="거주지 주소 입력" 
+                  placeholder="거주지 주소 입력"
                   className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -708,6 +753,23 @@ export default function DailyContractPage() {
                 >
                   <option value="net">실수령액 (Net) 기준 표기</option>
                   <option value="gross">세전금액 (Gross) 기준 표기</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">급여 지급일</label>
+                <select
+                  value={formData.payment_date}
+                  onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
+                  className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="same_day">당일 지급</option>
+                  <option value="next_day">익일 지급</option>
+                  <option value="weekly">매주 지급</option>
+                  <option value="monthly_10">매월 10일</option>
+                  <option value="monthly_15">매월 15일</option>
+                  <option value="monthly_25">매월 25일</option>
+                  <option value="monthly_last">매월 말일</option>
                 </select>
               </div>
 
