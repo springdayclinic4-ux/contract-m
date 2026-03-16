@@ -836,15 +836,9 @@ async function authRoutes(fastify, options) {
     });
 
     // 비밀번호 변경 시 모든 기존 세션 무효화 (보안)
-    const userModel = user_type === 'hospital' ? prisma.hospital
-      : user_type === 'doctor' ? prisma.doctor
-      : prisma.employee;
-    const user = await userModel.findUnique({ where: { email } });
-    if (user) {
-      await prisma.session.deleteMany({
-        where: { userId: user.id, userType: user_type }
-      });
-    }
+    await prisma.session.deleteMany({
+      where: { userId: user.id, userType: user_type }
+    });
 
     return { success: true, message: '비밀번호가 변경되었습니다.' };
   });
