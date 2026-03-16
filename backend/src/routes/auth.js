@@ -783,6 +783,27 @@ async function authRoutes(fastify, options) {
       });
     }
 
+    // 사용자 존재 확인
+    let user;
+    switch (user_type) {
+      case 'hospital':
+        user = await prisma.hospital.findUnique({ where: { email } });
+        break;
+      case 'doctor':
+        user = await prisma.doctor.findUnique({ where: { email } });
+        break;
+      case 'employee':
+        user = await prisma.employee.findUnique({ where: { email } });
+        break;
+    }
+
+    if (!user) {
+      return reply.status(404).send({
+        success: false,
+        message: '해당 이메일로 가입된 계정을 찾을 수 없습니다. 사용자 유형을 확인해주세요.'
+      });
+    }
+
     // 비밀번호 해시
     const passwordHash = await bcrypt.hash(new_password, 10);
 
