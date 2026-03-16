@@ -29,7 +29,8 @@ api.interceptors.response.use(
 
     // 401 에러이고 재시도하지 않은 경우 (로그인 요청은 제외)
     const isLoginRequest = originalRequest.url?.includes('/auth/login');
-    if (error.response?.status === 401 && !originalRequest._retry && !isLoginRequest) {
+    const isAdminRequest = originalRequest.url?.includes('/auth/admin-') || originalRequest.url?.includes('/admin/');
+    if (error.response?.status === 401 && !originalRequest._retry && !isLoginRequest && !isAdminRequest) {
       originalRequest._retry = true;
 
       try {
