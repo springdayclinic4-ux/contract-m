@@ -9,12 +9,14 @@ const api = axios.create({
   withCredentials: true, // 쿠키 전송
 });
 
-// 요청 인터셉터: 토큰 추가
+// 요청 인터셉터: 토큰 추가 (이미 설정된 경우 덮어쓰지 않음)
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    if (!config.headers.Authorization) {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
