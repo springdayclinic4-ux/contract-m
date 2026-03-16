@@ -9,6 +9,8 @@ import ContractDetailPage from './pages/ContractDetailPage';
 import ContractInvitationPage from './pages/ContractInvitationPage';
 import StatisticsPage from './pages/StatisticsPage';
 import AdminConsolePage from './pages/AdminConsolePage';
+import AdminLoginPage from './pages/AdminLoginPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
 import SettingsPage from './pages/SettingsPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
@@ -37,6 +39,8 @@ function App() {
         <Route path="/contracts" element={<ContractsListPage />} />
         <Route path="/statistics" element={<StatisticsPage />} />
         <Route path="/ops-panel-7x9k2m" element={<AdminConsolePage />} />
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin" element={<AdminDashboardPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Routes>
     </BrowserRouter>
